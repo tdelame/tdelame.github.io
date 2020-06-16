@@ -1,11 +1,64 @@
+
+
+# This config file is meant for settings that affect your whole blog, values
+# which you are expected to set up once and rarely edit after that. If you find
+# yourself editing this file very often, consider using Jekyll's data files
+# feature for the data you need to update frequently.
+#
+# For technical reasons, this file is *NOT* reloaded automatically when you use
+# 'bundle exec jekyll serve'. If you change this file, please restart the server process.
+
+# Site settings
+# These are used to personalize your new site. If you look in the HTML files,
+# you will see them accessed via {{ site.title }}, {{ site.email }}, and so on.
+# You can create any custom variable you would like, and they will be accessible
+# in the templates via {{ site.myvariable }}.
 title: Virtual Atom
-author: Tom Delame
+author: Thomas Delame
 email: admin@virtual-atom.com
+url: "http://virtual-atom.com"
 description: >
-  Hi, I'm Tom Delame! I am a R&D software engineer in Computer Graphics in Paris area. 
-  I work in python and C++ on an intuitive and efficient professional 3D animation software.
+  I am a R&D software engineer in Computer Graphics in Paris area. 
+  I work in python and C++ on an intuitive and efficient 3D animation software.
   I also code game AI for fun.
 
+search: true
 
+# Social Profiles
 twitter_username: AtomDelame
-github_username:  tdelame
+github_username: tdelame
+linkedin_username: thomas-delame
+
+# Add your google-analytics ID here to activate google analytics
+#google_analytics:   UA-XXXXXXXXX-X # out your google-analytics code
+
+
+# Build settings
+markdown: kramdown
+plugins:
+  - jekyll-feed
+  - jekyll-paginate
+  - jekyll-sitemap
+  - jekyll-gist
+  - jekyll-include-cache
+
+# Outputting
+permalink: /:categories/:title/
+paginate: 5 # amount of posts to show
+paginate_path: /page:num/
+timezone: Europe/Paris
+
+# include:
+#   - _pages
+
+footer:
+  links:
+    - label: "Twitter"
+      icon: "fab fa-fw fa-twitter-square"
+      url: "https://twitter.com/AtomDelame"
+    - label: "GitHub"
+      icon: "fab fa-fw fa-github"
+      url: "https://github.com/tdelame"
+    - label: "LinkedIn"
+      icon: "fab fa-fw fa-linkedin"
+      url: "https://www.linkedin.com/in/thomas-delame"
