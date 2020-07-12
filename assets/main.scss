@@ -3,3 +3,16 @@
 ---
 
 @import "styles";
+
+
+p {
+  text-align: justify;
+  text-justify: auto;
+}
+
+header.masthead .overlay {
+  background-color: #2a929f;
+}
+header.masthead {
+  background-color: #2a929f;
+}
