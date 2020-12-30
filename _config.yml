@@ -41,6 +41,8 @@ plugins:
   - jekyll-sitemap
   - jekyll-gist
   - jekyll-include-cache
+  - jekyll-seo-tag #page title and description, canonical url, open graph title/description (facebook linkedin), twitter summary card
+  - jekyll-last-modified-at
 
 # Outputting
 permalink: /:categories/:title/
