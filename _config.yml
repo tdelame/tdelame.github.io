@@ -13,48 +13,24 @@
 # you will see them accessed via {{ site.title }}, {{ site.email }}, and so on.
 # You can create any custom variable you would like, and they will be accessible
 # in the templates via {{ site.myvariable }}.
+# Look at https://github.com/mmistakes/minimal-mistakes/blob/master/_config.yml for some example.
+locale: "en-US"
 title: Virtual Atom
-author: Thomas Delame
-email: admin@virtual-atom.com
 url: "http://virtual-atom.com"
-description: >
-  I am a R&D software engineer in Computer Graphics in Paris area. 
-  I work in python and C++ on an intuitive and efficient 3D animation software.
-  I also code game AI for fun.
-
 search: true
 
+# Social Sharing
+twitter:
+  username: AtomDelame
+
 # Social Profiles
-twitter_username: AtomDelame
-github_username: tdelame
-linkedin_username: thomas-delame
-
-# Add your google-analytics ID here to activate google analytics
-#google_analytics:   UA-XXXXXXXXX-X # out your google-analytics code
-
-
-# Build settings
-markdown: kramdown
-plugins:
-  - jekyll-feed
-  - jekyll-paginate
-  - jekyll-sitemap
-  - jekyll-gist
-  - jekyll-include-cache
-  - jekyll-seo-tag #page title and description, canonical url, open graph title/description (facebook linkedin), twitter summary card
-  - jekyll-last-modified-at
-
-# Outputting
-permalink: /:categories/:title/
-paginate: 5 # amount of posts to show
-paginate_path: "/posts/page:num/"
-timezone: Europe/Paris
-
-# include:
-#   - _pages
-
-footer:
+social:
+  type: Person
+  name: "Thomas Delame"
   links:
+    - label: "Virtual Atom"
+      icon: "fas fa-fw fa-link"
+      url: "https://virtual-atom.com"
     - label: "Twitter"
       icon: "fab fa-fw fa-twitter-square"
       url: "https://twitter.com/AtomDelame"
@@ -64,3 +40,82 @@ footer:
     - label: "LinkedIn"
       icon: "fab fa-fw fa-linkedin"
       url: "https://www.linkedin.com/in/thomas-delame"
+
+# Analytics
+analytics:
+  provider: "google-universal"
+  google:
+    tracking_id: UA-78967382-1
+    anonymize_ip: true
+
+# Site Author
+author:
+  name: "Thomas Delame"
+  avatar:  /assets/medial/avatar.jpg
+  bio: "R&D software engineer in Computer Graphics in Paris area, code lover, video game addict. I code game AI for fun."
+  location: "Paris area"
+  links:
+    - label: "Email"
+      icon: "far fa-fw fa-envelope-square"
+      url: "mailto:admin@virtual-atom.com"
+    - label: "Virtual Atom"
+      icon: "far fa-fw fa-link"
+      url: "https://virtual-atom.com"
+    - label: "Twitter"
+      icon: "fab fa-twitter"
+      url: "https://twitter.com/AtomDelame"
+    - label: "GitHub"
+      icon: "far fa-fw fa-github"
+      url: "https://github.com/tdelame"
+    - label: "LinkedIn"
+      icon: "far fa-fw fa-linkedin"
+      url: "https://www.linkedin.com/in/thomas-delame"
+
+# Site Footer
+footer:
+  links:
+    - label: "Email"
+      icon: "far fa-envelope"
+      url: "mailto:admin@virtual-atom.com"  
+    - label: "Twitter"
+      icon: "fab fa-twitter"
+      url: "https://twitter.com/AtomDelame"
+    - label: "GitHub"
+      icon: "fab fa-github"
+      url: "https://github.com/tdelame"
+    - label: "LinkedIn"
+      icon: "fab fa-linkedin"
+      url: "https://www.linkedin.com/in/thomas-delame"
+
+description: >
+  I am a R&D software engineer in Computer Graphics in Paris area. 
+  I work in python and C++ on an intuitive and efficient 3D animation software.
+  I also code game AI for fun.
+
+# Build settings
+markdown: kramdown
+plugins:
+  - jekyll-feed
+  - jekyll-paginate
+  - jekyll-sitemap
+  - jekyll-gist
+  - jekyll-include-cache
+  - jekyll-last-modified-at
+  - jekyll-avatar
+
+# Outputting
+permalink: /:categories/:title/
+paginate: 5 # amount of posts to show
+paginate_path: "/posts/page:num/"
+timezone: Europe/Paris
+
+defaults:
+  - scope:
+      path: ""
+      type: posts
+    values:
+      layout: single
+      author_profiles: true
+      read_time: true
+      share: true
+      related: true

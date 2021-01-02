@@ -14,13 +14,7 @@ title: Posts
     <h3 class="post-subtitle">{{ post.subtitle }}</h3>    
     {% endif %}
   </a>
-  <p class="post-meta">Posted by
-    {% if post.author %}
-    {{ post.author }}
-    {% else %}
-    {{ site.author }}
-    {% endif %}
-    on {{ post.date | date: '%B %d, %Y' }} &middot;
+  <p class="post-meta">Posted by {{ site.author.name }} on {{ post.date | date: '%B %d, %Y' }} &middot;
   </p>
 </article>
 
