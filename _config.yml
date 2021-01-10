@@ -88,9 +88,7 @@ footer:
       url: "https://www.linkedin.com/in/thomas-delame"
 
 description: >
-  I am a R&D software engineer in Computer Graphics in Paris area. 
-  I work in python and C++ on an intuitive and efficient 3D animation software.
-  I also code game AI for fun.
+  R&D software engineer in Computer Graphics in Paris area, code lover, video game addict. I code game AI for fun.
 
 # Build settings
 markdown: kramdown
