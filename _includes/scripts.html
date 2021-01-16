@@ -1,0 +1,11 @@
+<script src="{{"/assets/vendor/jquery/jquery.min.js" | relative_url }}"></script>
+<script src="{{"/assets/vendor/bootstrap/js/bootstrap.bundle.min.js" | relative_url }}"></script>
+<script src="{{"/assets/vendor/startbootstrap-clean-blog/js/clean-blog.min.js" | relative_url }}"></script>
+
+{% if page.has_code %}
+<link rel="stylesheet" href="{{"/assets/vendor/highlight/styles/zenburn.css" | relative_url }}">
+<script src="{{"/assets/vendor/highlight/highlight.pack.js" | relative_url }}"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+{% endif %}
+
+{% include analytics.html %}

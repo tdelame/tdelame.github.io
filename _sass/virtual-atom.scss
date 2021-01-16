@@ -1,0 +1,15 @@
+/*!
+ * Virtual Atom Jekyll theme.
+ * This theme is inspired by Bootstrap - Clean Blog Jekyll, by Blackrock Digital LLC, licensed under MIT 
+ * (see https://github.com/StartBootstrap/startbootstrap-clean-blog-jekyll/blob/master/LICENSE)
+ */
+
+@import "virtual-atom/variables";
+@import "virtual-atom/mixins";
+@import "virtual-atom/global";
+@import "virtual-atom/navbar";
+@import "virtual-atom/masthead";
+@import "virtual-atom/post";
+@import "virtual-atom/contact";
+@import "virtual-atom/footer";
+@import "virtual-atom/bootstrap-overrides";

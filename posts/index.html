@@ -5,17 +5,12 @@ title: Posts
 
 {% for post in paginator.posts %}
 
-<article class="post-preview">
+<article class="post-preview" itemscope itemtype="https://schema.org/CreativeWork">
   <a href="{{ post.url | prepend: site.baseurl | replace: '//', '/' }}">
-    <h2 class="post-title">{{ post.title }}</h2>
-    {% if post.description %}
-    <h3 class="post-subtitle">{{ post.description | strip_html }}</h3>
-    {% else %}
-    <h3 class="post-subtitle">{{ post.subtitle }}</h3>    
-    {% endif %}
+    <h3 class="post-title" itemprop="headline"> {{ post.title }} {% if post.subtitle %} - {{ post.subtitle }} {% endif %} </h3>
+    <p class="post-description" itemprop="description">{{ post.description | strip_html }} </p>
   </a>
-  <p class="post-meta">Posted by {{ site.author.name }} on {{ post.date | date: '%B %d, %Y' }} &middot;
-  </p>
+  <p class="post-meta">Posted by {{ site.author.name }} on {{ post.date | date: '%B %d, %Y' }} </p>
 </article>
 
 <hr>

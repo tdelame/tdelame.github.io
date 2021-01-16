@@ -1,11 +1,15 @@
 <!doctype html>
 <html lang="{{ site.locale | slice: 0,2 | default: en}}">
-  {% include head.html %}
+  <head>
+    {% include head.html %}
+  </head>
+
   <body>
     {% include navbar.html %}
 
     {{ content }}
   
     {% include footer.html %}
+    {% include scripts.html %}
   </body>
 </html>
