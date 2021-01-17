@@ -182,7 +182,7 @@ tags:
   Result search( const Params& params ) {
     Result result;
 
-    while( nodes[ params.start_node ].outcome == Node::unknown_outcome && timer::elapsed() < params.time_limit ) {
+    while( nodes[ params.start_node ].outcome == Node::unknown_outcome && timer::elapsed() &lt; params.time_limit ) {
       // reset the search to current state
       Board board{ params.state.board };
       uint32_t node_index = params.start_node;
@@ -193,7 +193,7 @@ tags:
         if( current.child_count == 0 ) break;
 
         NodeSelecter selecter{ current }; // customization point 1: how to select a path in the tree?
-        for( uint16_t i = 0; i < current.child_count && !selecter.finished(); ++i )
+        for( uint16_t i = 0; i &lt; current.child_count && !selecter.finished(); ++i )
           selecter.add( current.left_child + i );
 
         node_index = selecter.best_node_index();
@@ -203,7 +203,7 @@ tags:
       // expansion
       if( !board.complete() && nodes[ node_index ].child_count == 0 ) {
         compute_moves( board ); // customization point 2: how to choose moves to consider?
-        for( uint32_t i = 0; i < used_moves; ++i ) {
+        for( uint32_t i = 0; i &lt; used_moves; ++i ) {
           auto& child = nodes[ used_nodes + i ];
           child.init( node_index );
           child.x = preallocated_moves[ i ].x;
@@ -234,7 +234,7 @@ tags:
         if( solved && node.child_count ) {
           bool all_solved = true;
           uint32_t best_index = 0;
-          for( uint32_t i = node.left_child, end = i + node.child_count; i < end; ++i ) {
+          for( uint32_t i = node.left_child, end = i + node.child_count; i &lt; end; ++i ) {
             if( nodes[ i ].outcome == Node::unknown_outcome )
               all_solved = false;
             else if( best_index == 0 || nodes[ i ].outcome > nodes[ best_index ].outcome )
@@ -255,7 +255,7 @@ tags:
     // choose the best found node
     auto& root_node = nodes[ params.start_node ];
     BestNodeEvaluation evaluation; // customization point 4: which child to play?
-    for( uint32_t i = 0; i < root_node.child_count; ++i ) {
+    for( uint32_t i = 0; i &lt; root_node.child_count; ++i ) {
       auto& child = nodes[ root_node.left_child + i ];
       BestNodeEvaluation this_node_evaluation{ child };
       if( this_node_evaluation > evaluation ) {
@@ -372,7 +372,7 @@ tags:
       <th scope="col"> Expected Move </th>
     </tr>
   </thead>
-  <tbody stle='font-family:"Courier New", Courier, monospace;'>
+  <tbody style='font-family:"Courier New", Courier, monospace;'>
     <tr> <th scope="row"> Redstrike     </th> <td> 73.7% </td> </tr>
     <tr> <th scope="row"> MSmits        </th> <td> 80.8% </td> </tr>
     <tr> <th scope="row"> EricSMSO      </th> <td> 85.1% </td> </tr>
