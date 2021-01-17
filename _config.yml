@@ -16,7 +16,7 @@
 # Look at https://github.com/mmistakes/minimal-mistakes/blob/master/_config.yml for some example.
 locale: "en-US"
 title: Virtual Atom
-url: "http://virtual-atom.com"
+url: "https://virtual-atom.com"
 search: true
 
 # Social Sharing
