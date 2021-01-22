@@ -11,7 +11,7 @@ description: This article introduces the activities you can do on CodinGame and 
 published: true
 sitemap: true
 category: CodinGame
-tags: 
+tags:
   - CodinGame
   - Bot Programming
   - Developer Skills
@@ -25,7 +25,7 @@ tags:
   Thus for years, I have not given much thought to it.
 </p>
 
-<p> 
+<p>
   A colleague of mine introduced me to the <a href="https://codingame.com">CodinGame</a> platform.
   I decided to give it a shot in march 2020 and was completely hooked.
   I believe that the gamification of programming challenges, competitive programming, and game AI helped me to get, and stay, motivated.
@@ -54,8 +54,8 @@ tags:
   You can check <a href="https://www.codingame.com/profile/13f69ffbb3731aaf6a96082320fc38448796273">my profile</a> to see my current ranking.
 </p>
 
-<p> 
-  For all these activities, you get your data in the standard input stream and you give your answer in the standard output stream. 
+<p>
+  For all these activities, you get your data in the standard input stream and you give your answer in the standard output stream.
   There are plenty of programming languages available, but I focus mostly on C, C++, and python.
   The code is compiled and executed on the platform, so for example you cannot pass compiler options for C and C++ solutions.
   There is a code size limit, a RAM consumption limit, and a response time limit (time between the moment your receive your input and the moment you send your answer).
@@ -72,7 +72,7 @@ tags:
 
 <p>
   Puzzles on CodinGame help you to discover and master some new algorithms or techniques.
-  Generally, you can reuse what you have learned on puzzles in bot programming or optimization. 
+  Generally, you can reuse what you have learned on puzzles in bot programming or optimization.
   This is how I learned <a href="https://en.wikipedia.org/wiki/Monte_Carlo_tree_search">Monte Carlo Tree Search (MCTS)</a>,
     a heuristic search algorithm that I later reused in bot programming for board games.
 </p>
@@ -98,14 +98,14 @@ tags:
   When I make a supposition about the way the code should behave, I add a test case for that.
   When I code some edge cases that happen very seldom, I add some test cases for each of these situations.
   I believe that CodinGame made me experience the confidence you can get in your code once you have a test suit.
-  Also, by looking at the test case in the platform, I get more and more familiar with how you can simply test a behavior. 
+  Also, by looking at the test case in the platform, I get more and more familiar with how you can simply test a behavior.
 </p>
 
 <p>
   I have learned, quite the hard way, that it is better to write only the minimum amount of code to solve a task.
   Solving puzzles is a good opportunity to practice this kind of code minimalism.
   Indeed, you have a code that is written by only one person, for only one task, without any change in the requirements or the constraints.
-  Thus, you have no excuse to have dead code, superfluous abstraction, unused field/variable, and so on. 
+  Thus, you have no excuse to have dead code, superfluous abstraction, unused field/variable, and so on.
 </p>
 
 <div class="card text-dark border-dark bg-light mb-3">
@@ -119,10 +119,10 @@ tags:
 
 <h2 id="bot_programming">3. Bot programming</h2>
 
-<p> 
+<p>
   For bot programming, you code a program that will send the actions to perform each turns for a player in a multiplayer game.
   Once you submit your program, it will enter the arena, where it will fight other players' programs.
-  The arena is divided into leagues: Wood, Bronze, Silver, Gold, and Legend. 
+  The arena is divided into leagues: Wood, Bronze, Silver, Gold, and Legend.
   The wood league is subdivided into more leagues, each one introduces a new rule for the game.
   The first time you submit your program, it enters the first wood league.
   During the submission, your program is matched against opponents to compute its ranking according to a <a href="https://en.wikipedia.org/wiki/TrueSkill">TrueSkill</a> system.
@@ -135,7 +135,7 @@ tags:
   This task, being better than thousands of players, can appear overwhelming.
   Indeed, there are so many possibilities to explore to improve the bot, so many variables to optimize.
   You have to prioritize improvements based on their return on investment: do first what will likely improve your ranking a lot.
-  And once you try an improvement, make sure to test it correctly and intensively 
+  And once you try an improvement, make sure to test it correctly and intensively
   (e.g. when you submit, you do not have a lot of games played with the new version of the program,
    so you might need to submit it multiple time or to build a local arena to have enough sample games).
   Also, make sure that there is no bug in your program as it is likely to cause you a lot of defeats.
@@ -156,15 +156,15 @@ tags:
   Once you have done that, the bot logic is similar to a search algorithm that tries to find the maximum evaluation of the game configuration space.
   For other games, you have to simulate many games per turn to choose the most promising move.
   In such a situation, the bot that makes the most simulation per turn is likely to win the battle.
-  Thus, you have to optimize your program to outperform your opponents 
-  (looking for algorithms with lower complexities, using profilers to find hotspots, using SIMD to optimize hotspots, etc...).  
+  Thus, you have to optimize your program to outperform your opponents
+  (looking for algorithms with lower complexities, using profilers to find hotspots, using SIMD to optimize hotspots, etc...).
 </p>
 
 <p>
-  I have noticed that tooling helped me a lot to improve my ranking in bot programming. 
+  I have noticed that tooling helped me a lot to improve my ranking in bot programming.
   For example, I wrote arenas to let the different versions of my program compete against each other and have thousands of games played under 10s of execution.
   I also wrote GUI to replay matches between my versions and display analysis information to understand what a bot missed.
-  Thanks to some posts in the forum, I found a way to fetch lost games in the online arena. 
+  Thanks to some posts in the forum, I found a way to fetch lost games in the online arena.
   I was then able to parse the data and build a graphical analysis of my defeat to find improvements or bugs.
   Finally, as the CodinGame platform requires a single source file, I have a script automatically called during the build process that assembles my bot source code from multiple files.
   I find it easier to develop with multiple source files, to separate concepts and responsibilities.
@@ -198,7 +198,7 @@ tags:
 </div>
 
 <p>
-  The search space for these games is too big to find an optimal solution in the allotted time. 
+  The search space for these games is too big to find an optimal solution in the allotted time.
   You have to rely on heuristics to find an acceptable but maybe not optimal solution.
   This focus on heuristics is something I enjoy in optimization games; you have to find shortcuts to provide an acceptable answer.
   It is not an easy task but once you mastered the design of heuristics, you can apply the skill to other problems.
@@ -206,7 +206,7 @@ tags:
 </p>
 
 <p>
-  I also like to optimize performance on optimization games. 
+  I also like to optimize performance on optimization games.
   As the game state space is so big, increasing the search speed can improve a lot the final result.
   Thus, optimization games promote the practice of profiling, bottleneck identification, and performance optimization.
 </p>
@@ -224,7 +224,7 @@ tags:
 
 <p>
   A contest is either a new optimization game or a new bot programming game, meaning there are no players in the arena before the start date.
-  For a bot programming game, initially, only the wood leagues are opened, higher leagues will open at later dates. 
+  For a bot programming game, initially, only the wood leagues are opened, higher leagues will open at later dates.
   When a new league opens, a bot is chosen as the league's boss and every bot higher ranked than the boss is automatically promoted to the higher league.
   The boss is chosen by CodinGame's staff to promote only a fraction of bots and not overcrowd the new league.
   Other bots need to be improved and resubmitted to finish with a ranking higher than the boss after all submission matches.
@@ -233,7 +233,7 @@ tags:
 <p>
   The two specificities of a contest compared to an optimization game or a bot programming game are that you are limited in time and no working strategies are known.
   Since there is a deadline, you have to find clever ways to climb in the ranking before the contest ends.
-  Also, because the game is new, there are no proven strategies available somewhere, you have to find your solution from scratch. 
+  Also, because the game is new, there are no proven strategies available somewhere, you have to find your solution from scratch.
   I find the situation similar to when you have to build a working demo of new features.
   In my opinion, contests are a nice way to train for such situations with much fewer consequences in your professional life &#128516;.
 </p>
@@ -243,7 +243,7 @@ tags:
   Due to the limited time, my final ranking cannot be improved by spending more time developing a solution.
   I have as much time as any other participants.
   Thus I consider that my ranking reflects the following:
-</p>  
+</p>
 <ul>
   <li> the quantity of knowledge I acquired </li>
   <li> how well I prioritized my tasks </li>
@@ -255,15 +255,15 @@ tags:
 </ul>
 
 <p>
-  When I started on CodinGame, there was a contest called Ocean of Code. 
-  I was overwhelmed by the apparent complexity of the task to solve and astonished by the skills of other participants. 
+  When I started on CodinGame, there was a contest called Ocean of Code.
+  I was overwhelmed by the apparent complexity of the task to solve and astonished by the skills of other participants.
   I did not submit any program to the arena and was not ranked.
   Then, there was the <a href="https://www.codingame.com/contests/spring-challenge-2020"> Spring Challenge 2020</a>.
-  I ended ranked 672 out of 4&nbsp;955, at the top of the silver league. 
+  I ended ranked 672 out of 4&nbsp;955, at the top of the silver league.
   For the second half of the contest, I could not progress anymore, unable to find how to coordinate multiple agents and how to tackle the fog of war.
   Six months later, there was the <a href="https://www.codingame.com/contests/fall-challenge-2020">Fall Challenge 2020</a>.
   I finished ranked 271 out of 7&nbsp;011, around the middle of the gold league. For this contest, I was limited by my capacity to design a better evaluation function.
-  I believe this is a great improvement, knowing that I spent much less time on this contest than on the previous one (I was on holidays for the Sping Challenge 2020, during lockdown so without many other things to do &#128516;).
+  I believe this is a great improvement, knowing that I spent much less time on this contest than on the previous one (I was on holidays for the Spring Challenge 2020, during lockdown so without many other things to do &#128516;).
 </p>
 
 <div class="card text-dark border-dark bg-light mb-3">
@@ -284,7 +284,7 @@ tags:
 </p>
 
 <p>
-  Often, you might rely on hardcoding to simplify your solution. 
+  Often, you might rely on hardcoding to simplify your solution.
   Since you have a limited set of validation test cases, you can try to guess what are those tests.
   Then, you code a solution valid only for those tests, scrapping every part of the source code that is never reached by any of those tests.
   It can be seen as an extreme case of YAGNI.
@@ -325,7 +325,7 @@ tags:
 </p>
 
 <p>
-  COCs also taught me to handle failure. 
+  COCs also taught me to handle failure.
   In my first COCs, I finished first quite easily and was very proud of myself.
   Then, sometimes, I finished last for some COC, unable to solve a task, which was very simple.
   I understood that you cannot always have immediately the right answer and that is perfectly fine.
@@ -334,7 +334,7 @@ tags:
 
 <h2> Conclusion </h2>
 
-<p> 
+<p>
   I recommend to anybody interested in Game AI, competitive programming, or improving their developer skills to give the CodinGame platform a try.
   There are many activities you could try at your own pace.
   A recent quest system can even help you to find your way through the platform.
