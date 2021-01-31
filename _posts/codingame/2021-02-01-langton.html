@@ -2,12 +2,12 @@
 layout: post
 title: "Langton's Ant"
 subtitle: "applying Monte Carlo tree search"
-date: 2021-01-02 17:30:00 +0200
+date: 2021-02-01 08:00:00 +0200
 background: '/assets/media/langton/cover.jpg'
 has_code: true
 seo_title: "MCTS for Langton's Ant"
 seo_teaser: "/assets/media/langton/cover.jpg"
-description: This article explains how I coded a bot for Langton's Ant on CodinGame with a Monte Carlo Tree Search
+description: How to code a bot for Langton's Ant on CodinGame with Monte Carlo Tree Search
 
 published: true
 sitemap: true
@@ -24,6 +24,14 @@ tags:
   I did so because I wanted to learn <a href="https://en.wikipedia.org/wiki/Monte_Carlo_tree_search">Monte Carlo Tree Search (MCTS)</a> and this bot programming was tagged with MCTS.
   Since then, I have improved my understanding of MCTS and practiced a lot of bot programming on CodinGame.
   Let us see if I can improve my ranking on Langton's Ant!
+</p>
+
+<p>
+  Please note that the code I share in this article is not what I would call production-ready code.
+  On the CodinGame platform, you cannot activate compiler optimizations.
+  Thus, any use of the STL is prohibitive as it is really slow when used without compiler optimizations.
+  Also, you have to get rid of any unnecessary abstraction and write low-level code.
+  Still, I believe that the shared code can constitute a nice basis to write bots for board games on CodinGame.
 </p>
 
 <h2> 1. Initial Situation - a Black Box Ranked #8</h2>
@@ -74,7 +82,7 @@ tags:
   This bot programming is a two-player board game, played in two rounds.
   The first player has the gold color, and the second player has the blue color.
   The board is composed of <code>N x N</code> tiles where <code>N</code> is an odd number in <code>[25, 35]</code>.
-  A round starts with the board completely white. 
+  A round starts with the board completely white.
   Players alternatively choose a white tile and color it with their color, until there are <code>2×T</code> colored tiles (<code>T</code> gold tiles and <code>T</code> blue tiles),
   for <code>T</code> in <code>[15, 25]</code>.
   Then a <a href="https://en.wikipedia.org/wiki/Langton%27s_ant">Langton's ant</a> is placed in the middle of the board, facing upward, colored with the first player color.
@@ -163,7 +171,7 @@ tags:
   }
 }</code></pre></div>
 
-<p> 
+<p>
   As always in my source code for CodinGame, objects are stored into global contiguous stack buffers.
   Since they are global, I do not have to pass them around in every function I write, which helps to reduce the parameter list and eases the development.
   Because it is contiguous, the performance will likely benefit from cache hits.
@@ -268,12 +276,12 @@ tags:
     result.y = nodes[ result.best_child ].y;
     result.outcome = nodes[ result.best_child ].outcome;
 
-    return result;    
+    return result;
   }
 </code></pre></div>
 
 <p>
-  You can notice 4 customization points that are not given in the previous code. 
+  You can notice 4 customization points that are not given in the previous code.
   The first one is the tree node selection during a step of the search.
   I used something standard for this, with Upper Confidence bounds applied to Trees (UCT) that balances exploration (getting new data) and exploitation (using acquired data).
   If a node has never been explored, the selecter will select it and immediately stop the selection.
@@ -380,3 +388,10 @@ tags:
     <tr> <th scope="row"> eulerscheZahl </th> <td> 90.8%</td> </tr>
   </tbody>
 </table>
+
+<p>
+  Since you are now acquainted with MCTS, I recommend you trying the bot programming <a href="https://www.codingame.com/multiplayer/bot-programming/tic-tac-toe">Ultimate Tic-Tac-Toe</a> (UTTT) on CodinGame.
+  You can achieve a high rank in UTTT with a simple MCTS, tuned for performance.
+  To be promoted to the Legend league, you only need to improve your number of MCTS iterations per turn.
+  Profile your bot, optimize it, and see you in Legend! &#128526;
+</p>
