@@ -249,7 +249,7 @@ tags:
               best_index = i;
           }
 
-          if( best_child && all_solved )
+          if( best_index && all_solved )
             node.outcome = -nodes[ best_index ].outcome;
           else solved = false;
         }
