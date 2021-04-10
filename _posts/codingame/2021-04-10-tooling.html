@@ -1,0 +1,404 @@
+---
+layout: post
+title: "Tools to develop C++ CodinGame Bots Efficiently"
+date: 2021-04-10 10:30:00 +0200
+background: '/assets/media/tooling/cover.png'
+has_code: true
+seo_title: "Tools to develop C++ CodinGame Bots Efficiently"
+seo_teaser: "/assets/media/tooling/cover.png"
+description: The setup, VS Code extension, and python scripts I use to work efficiently on bots
+
+published: true
+sitemap: true
+category: CodinGame
+tags:
+  - CodinGame
+  - Bot Programming
+  - VS Code
+  - Clang
+  - Tooling
+---
+
+<p>
+  When I started to develop bots on CodinGame, I quickly missed some features to be efficient.
+  For example, I wanted to pass specific options to the compiler, split my code into multiple files, and run the bot in a debugger.
+  I thus decided to write, debug and run code locally.
+  Since I work on my computer, I could also build and use tools to improve my productivity, as I am accustomed to doing when I code.
+  I know that setting up a C++ project on a computer is not the easiest and the funniest thing to do.
+  This setup can repel some people that would thus avoid working locally.
+</p>
+
+<p>
+  To help you quickstart your CodinGame activities on your computer, I wrote a C++ <a href="https://github.com/tdelame/codingame_starter">starter project</a> and a <a href="https://github.com/tdelame/codingame_vscode_extension">VS Code extension</a>.
+  This article will tell you how to install and use them.
+  You will also see some of the tools I built, such that you could code your own.
+</p>
+
+<p>
+  <strong>Note 1:</strong>
+  Some scripts, functionalities, and code are missing from this article.
+  One of the reasons is it is advised on CodinGame forum not to distribute tools that will fetch replays.
+  Since the website API is public, you can easily download your last matches to analyze the decisions made by your bot.
+  However, if many people would do it without considering the workload it imposes on CodinGame servers, the API would not be public any longer.
+  Other tools are missing because I did not write them correctly yet.
+  If you want to share some ideas, feel free to contact me &#128516;.
+  Finally, some tool gives too much competitive edge to be shared.
+  It would be better for you to craft your tools to be more efficient.
+</p>
+
+<p>
+  <strong>Note 2:</strong>
+  Until very recently, I developed exclusively on Linux.
+  As such, I may have overlooked specificities on Windows.
+  If you encounter any issues or have suggestions to improve Windows support, let me know.
+</p>
+
+
+<h2> 1. Installation </h2>
+
+<p> This section will guide you to install the required tools and the VS Code extension I wrote.
+  That VS Code extension expects you to install the following on your computer: </p>
+<ul>
+  <li>VS Code (of course &#128518;)</li>
+  <li>C/C++ VS Code extension,</li>
+  <li><code>cmake</code> to generate a build configuration for your projects,</li>
+  <li><code>ninja</code> to build your projects; this generator is fast and provides <code>compile_commands.json</code> which is used by IntelliSense,</li>
+  <li><code>compdb</code> to extend the <code>compile_commands.json</code> file with headers, to improve the indexing done by IntelliSense,</li>
+  <li><code>clang</code> to perform the indexing done by IntelliSense.</li>
+</ul>
+
+<p>Additionally, to use the starter project I provide, you need:</p>
+<ul>
+  <li><code>lld</code>, an efficient C++ linker (you can get rid of this requirement by modifying one line in the <code>CMakeLists.txt</code> file),</li>
+  <li><code>python</code>, to execute scripts.</li>
+</ul>
+
+<p>On Linux, your package manager will install everything for you, except the C/C++ VS Code extension you can get from VS Code itself.</p>
+
+<p>On Windows, start by downloading and running installers for <a href="https://code.visualstudio.com/#alt-downloads">VS Code</a>,
+  <a href="https://cmake.org/download/"><code>cmake</code></a>,
+  <a href="https://github.com/ninja-build/ninja/releases"><code>ninja</code></a>,
+  and <a href="https://www.python.org/downloads/windows/"><code>python</code></a>.
+  Then <a href="https://github.com/Sarcasm/compdb#installation">install <code>compdb</code></a>, and make sure it is in the search path (on my computer, the path to add was <code>C:\Users\atom\AppData\Roaming\Python\Python39\Scripts</code>).
+  Next, download and run an installer found on <a href="https://llvm.org/builds/">LLVM</a>.
+  This installer will take care of <code>clang</code> and <code>lld</code>, among other nice things.
+</p>
+
+<p>Now we can install the two VS Code extensions. In VS Code, type <code>Ctrl+Shift+X</code> to open the extensions panel.
+  Then type <code>C++</code> in the search box, find an install the following extension:</p>
+
+<div>
+  <div class="text-center">
+    <img class="img-fluid" src="{{"/assets/media/tooling/c_cpp_extension.png" | relative_url }}" alt="Appearance of the C++ extension">
+  </div>
+  <span class="caption text-muted">C/C++ extension for VS Code, a nice extension you must use in VS Code! </span>
+</div>
+
+<p>
+  For the CodinGame extension I wrote, you have to download in on <a href="https://github.com/tdelame/codingame_vscode_extension/releases">the github repository</a>.
+  Then type <code>Ctrl+Shift+X</code> again in VS Code to open the extension panel, click on the three dots at the top right, and select <code>Install from VSIX...</code> in the menu.
+  Select the downloaded extension, and let VS Code install it for you.
+</p>
+
+<p>
+  The last thing you need is a starter project.
+  This project will serve as a basis for new bots you will create.
+  Have a look at the requirements for such a project in the <a href="https://github.com/tdelame/codingame_vscode_extension#11-create-a-new-c-bot-project">README</a> of the extension repository on GitHub to create your own,
+  or fetch a copy of <a href="https://github.com/tdelame/codingame_starter">the one I provide</a>.
+</p>
+
+<h2> 2. Configuration </h2>
+
+<p>
+  The VS Code extension has some settings documented here. Most of the settings are related to the organization of your projects. Mine are organized like so:
+</p>
+<ul>
+  <li><code>codingame/</code> which is my root path, and its absolute path is stored inside the setting <code>rootPath</code>
+    <ul>
+      <li><code>bot1/</code> the folder for the bot <code>bot1</code></li>
+      <li><code>bot2/</code> the folder for the bot <code>bot2</code></li>
+      <li><code>...</code></li>
+      <li><code>tools/</code> where I store everything that is not specific to a bot
+        <ul>
+          <li><code>include/</code> contains all my generic headers. If you have a different organization, put the path of that folder into the <code>includePath</code> setting</li>
+          <li><code>lib/</code> contains all libraries I use in my tools. If you have a different organization, put the path of that folder into the <code>libPath</code> setting</li>
+          <li><code>scripts/</code> for scripts that fetch replay, analyze them, test the bot, and so on</li>
+          <li><code>starter/</code> the starter project. If you have a different organization, put the path of that folder into the <code>starterPath</code> setting</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ul>
+
+<p>
+  Then, you have three settings in the extension to customize the build of the bot.
+  <code>cmakeExtra</code> is to pass some extra arguments to <code>CMake</code> when configuring the build.
+  <code>cCompilerPath</code> and <code>cppCompilerPath</code> are to make sure you use the compiler you want.
+  If not defined, <code>CMake</code> will use the default compiler found on your system.
+  I recommend using Clang since it works nicely on all platforms, provides nice error and warning messages, and comes with a lot of useful tools.
+</p>
+
+<p>
+  Finally, you have four settings relative to CodinGame.
+  <code>gamePassword</code> and <code>gamerEmail</code> are used to store your credentials to connect to CodinGame.
+  While <code>gameId</code> and <code>isMulti</code> are per-project settings, to store respectively the identifier of the bot on CodinGame (it's the last part of the URL when you are in CodinGame's IDE) and if the bot is for a multiplayer game.
+  You can see how to define those per-project settings on lines 2 and 3 of that <a href="https://github.com/tdelame/codingame_starter/blob/main/.vscode/settings.json">file</a>.
+</p>
+
+
+<h2> 3. Using the extension </h2>
+
+<p>
+  The extension commands are currently limited.
+  It can create, open, configure, archive, and send bots.
+  The starter project I provide enables the indexing of your source code by VS Code.
+  Thus, some cool features of the IDE are activated, such as finding references, refactoring, and error checking.
+  There is also a task to build the bot from the IDE.
+</p>
+
+<h3> 3.1 Creating and opening </h3>
+
+<p>
+  In the IDE, bring the command palette with the <code>Ctrl+Shift+P</code> shortcut.
+  In the palette textbox, start to type <code>Create</code> and select the <code>CodinGame: Create New Project</code> command.
+  Then, type the name of the new bot and press enter.
+  A new project with the given name will be created, using the starter project as a basis.
+</p>
+
+<p>As for all commands, if an error happened during the execution of the command, you will see a notification in a popup located in the lower right corner of VS Code.</p>
+
+<div>
+  <div class="text-center">
+    <img class="img-fluid" src="{{"/assets/media/tooling/create_new_bot.gif" | relative_url }}" alt="Using the command palette to create a new bot">
+  </div>
+  <span class="caption text-muted">Creating a new c++ bot for CodinGame has never been easier.</span>
+</div>
+
+<p>
+  Similarly, you can open any bot project in your <code>rootPath</code> folder with the command <code>CodinGame: Open Bot Project</code>.
+  The command checks for you if the name you give is an actual bot name.
+</p>
+
+<h3> 3.2 Configuring and building </h3>
+
+<p>
+  When you create a new bot project or add a new file to the project, you need to configure it.
+  The configuration makes sure the build system is up to date and produces the <code>.vscode/compile_commands.json</code> file.
+  This file is crucial to let VS Code parse and analyze your project.
+  It is crafted by <code>CMake</code> when your generator is either <code>Ninja</code> or <code>Make</code>, then improved by <code>compdb</code> with header files.
+  To configure your bot, select <code>CodinGame: Configure Build</code> in the command palette.
+  You have then to choose the build type used to configure the build.
+  <code>Debug</code> is to be reserved when you hunt down bugs, as it is slower to execute.
+  <code>Dev</code> is your go-to build type, as it is fast enough and style offers some debug capacities.
+  <code>Release</code> is for performance-focused builds, ideal when you are comparing different versions of your bot in an arena.
+</p>
+
+<div>
+  <div class="text-center">
+    <img class="img-fluid" src="{{"/assets/media/tooling/configure_bot.gif" | relative_url }}" alt="Configuring a bot bring and then building it">
+  </div>
+  <span class="caption text-muted">Configuring a bot and then building it. Once configured, you can browse your code using Ctrl+Click on symbols or headers, among other cool things. The build merges a multiple file bot into a single file, ready to be sent to CodinGame.</span>
+</div>
+
+<p>
+  Sometimes, the indexing of your files will fail.
+  The indexing is when VS Code uses the <code>.vscode/compile_commands.json</code> file to parse your files and build the IntelliSense database to enable advanced features (right click on a symbol to see some of those features).
+  You can notice a failure when the IDE reports many errors in the source code, even if you did not change anything.
+  In such a situation, I find it useful to do the following:
+</p>
+
+<ol>
+  <li>delete the <code>.vscode/compile_commands.json</code> file,</li>
+  <li>execute the <code>C/C++: Reset IntelliSense Database</code> command in the command palette,</li>
+  <li>configure your bot,</li>
+  <li>execute the <code>C/C++: Reset IntelliSense Database</code> command again.</li>
+</ol>
+
+<p>
+  The start project I provide has a <code>.vscode/tasks.json</code> file.
+  This file can launch a build using <code>Ninja</code> in a terminal of VS Code and allows the IDE to parse errors to navigate between them.
+  To build your bot, use the <code>Ctrl+Shift+B</code> shortcut.
+  At the end of the build, a python script is executed to merge the bot files into a single file.
+  The resulting file is placed into the <code>package/</code> folder, ready to be sent to CodinGame.
+  The produced binaries are in the <code>bin/</code> folder.
+</p>
+
+<h3> 3.3 Archive bot version and send current version to CodinGame</h3>
+
+<p>
+  I keep previous versions of my bot in the <code>package/</code> folder.
+  That way, I can build them and let them fight to see if a new version is significatively better than previous ones.
+  To create a new version, you have to select the <code>CodinGame: Save Current Version</code> command in the command palette.
+  The new version will be automatically added to the build, thanks to the <code>PreviousBotVersions.cmake</code> file.
+</p>
+
+<p>
+  I prefer not to do menial tasks manually.
+  For such tasks, I rely on automation (or maybe I am just lazy &#128513;).
+  This is why there is a command to send the current bot version to CodinGame.
+  Use the <code>CodinGame: Sent Your Bot Code to CodinGame</code> command from the command palette to store the bot code on CodinGame servers.
+  This command takes some time to complete as the only way I found to save the code on CodinGame is to request a play in CodinGame's IDE.
+  The advantage is that you do not need to have an active session open on CodinGame.
+</p>
+
+<h2> 4. Python scripts to exploit replays</h2>
+
+<p>
+  When different bots fight in CodinGame arena, the results are summarized in a JSON file named replay.
+  The viewer in the IDE uses this file to show you how the fight went.
+  The replay contains whatever you sent to <code>stdout</code> and <code>stderr</code>, the input sent to you by the referee, and the summary of the turn assembled by the referee.
+  A section of the replay contains the name of the players for this match and their final scores.
+</p>
+
+<p>
+  As mentioned in the introduction, I will not give you a script to automatically collect replays.
+  However, I am sure you could build such a script yourself if you are motivated.
+  I cannot stress enough how valuable those replays could be!
+  Indeed, a common practice on CodinGame is to collect the last replays of a bot to analyze, debug, validate, and tune that bot.
+</p>
+
+<p>
+  To illustrate the power of replays, I share with you a small script I made to validate my bot for the card game <a href="https://www.codingame.com/multiplayer/bot-programming/legends-of-code-magic">Legend of Code &#38; Magic</a>.
+  My bot kept doing wrong actions, and I did not want to proofread my code multiple times.
+  I noticed the referee was kind enough to list the wrong actions my bot makes every turn.
+  So I thought it would be simpler to fetch replays, find turns where I made wrong actions, and list them all.
+  Then, in the replays, I would find the initial state I serialized in <code>stderr</code> for the turns I made wrong actions.
+  With this state serialization, I could run the bot in the debugger, find the error, fix it and validate the fix.
+  After a few iterations, I removed all the bugs from the bot and got promoted to the gold league.
+  In the following script, <code>3726978</code> is my identifier on CodinGame.
+  To find your identifier, execute the <code>CodinGame: Get CodinGame Id</code> command in the command palette.
+  <br/>
+  <button class="bt btn-primary" type="button" data-toggle="collapse" data-target="#locm_analyze" aria-expanded="false" aria-controls="locm_analyze">
+    Show/Hide Code
+  </button>
+</p>
+
+<div class="collapse" id="locm_analyze"><pre><code class="language-python">#!/usr/bin/env python
+import argparse
+import json
+import sys
+import os
+
+sys.path.append(os.path.join(sys.path[0], '..', '..', 'tools', 'scripts'))
+from utils.progress import progress_bar
+
+
+def __analyze_replay(folder_path):
+    paths_to_clean = []
+    for directory_path, _, file_names in os.walk(folder_path):
+        for file_name in file_names:
+            if file_name.endswith('.json'):
+                paths_to_clean.append(os.path.join(directory_path, file_name))
+
+    paths_to_clean.sort()
+
+    illegal_actions = []
+    defeats = []
+    timeouts = []
+    victory_by_timeout_count = 0
+    victory_count = 0
+    defeat_count = 0
+    match_count = 0
+
+    print('Analyzing replay from folder {}'.format(folder_path))
+    for replay in progress_bar(paths_to_clean, '  Progress', length=60):
+        with open(replay, 'r') as infile:
+            content = json.load(infile)
+
+        relative_replay_path = os.path.relpath(replay, folder_path)
+        try:
+            my_index = 0 if content['agents'][0]['codingamer']['userId'] == 3726978 else 1
+        except:
+            my_index = 1
+        my_var_index = '${}'.format(my_index)
+
+        this_replay_illegal_actions = []
+        for i, frame in enumerate(content['frames']):
+            summary = frame.get('summary', None)
+            if summary and '[Warning]' in summary and my_var_index in summary:
+                summary = summary.replace('[Warning]', '')
+                summary = summary.replace('\n', ';')
+                this_replay_illegal_actions.append((i+6, summary))
+
+        if this_replay_illegal_actions:
+            illegal_actions.append(
+                (relative_replay_path, this_replay_illegal_actions))
+
+        if content['ranks'][0] == my_index:
+            victory_count += 1
+            if content['scores'][1 - my_index] &lt; 0:
+                victory_by_timeout_count += 1
+        else:
+            defeat_count += 1
+            defeats.append(relative_replay_path)
+            if content['scores'][my_index] &lt; 0:
+                timeouts.append(relative_replay_path)
+        match_count += 1
+
+    print('  Summary: victories {} (by timeouts {}), defeats {} (by timeouts {}), win rate {:03.2f}'.format(
+        victory_count, victory_by_timeout_count, defeat_count, len(timeouts),
+        float(victory_count) / float(match_count) * 100.0))
+    if illegal_actions:
+        print('  Illegal actions')
+        for replay, actions in illegal_actions:
+            if len(actions) == 1:
+                print('   - {}: frame {}, {}'.format(replay, actions[0][0], actions[0][1]))
+            else:
+                print('   - {}'.format(replay))
+                for frame, action in actions:
+                    print('    - frame {}, {}'.format(frame, action))
+
+
+if __name__ == '__main__':
+    parser=argparse.ArgumentParser('replay_analyzer')
+    parser.add_argument(
+        'input', metavar='INPUT', type=str, nargs='+',
+        help='list of replay folder paths to clean')
+    settings=parser.parse_args()
+
+    for folder_path in settings.input:
+        if not os.path.exists(folder_path):
+            print('skipping folder {}: path does not exist'.format(folder_path))
+            continue
+        __analyze_replay(folder_path)
+</code></pre></div>
+
+<p>
+  Since the replay structure could be different between games, I tend to write a script for each game.
+  To maximize the usefulness of replays, I  add the following information in <code>stderr</code> for each turn:
+</p>
+
+<ul>
+  <li>a serialization of the initial state, such that I can load the turn to test in on my computer</li>
+  <li>a tag if I am expecting to win the game and another one if I am expecting to lose,</li>
+  <li>a tag if the bot crashed and some info to find the crash reason,</li>
+  <li>a serialization of the expected final state, if this makes sense for the game, to compare it with the initial state of the next turn.</li>
+</ul>
+
+<p>
+  The crash tag is here to distinguish between a timeout and a crash.
+  The referee does not make such a distinction: if the bot did not answer in due time, the referee considers that the bot time outed.
+  By catching <a href="https://man7.org/linux/man-pages/man7/signal.7.html">POSIX signals</a> inside the bot, I can print a particular string in <code>stderr</code> after a crash to ease the distinction.
+  This info allows me to efficiently find and fix crashes by parsing replays.
+</p>
+
+<p>
+  Tags for expected victory and defeat are handy for example to debug a <a href="{% post_url /codingame/2021-02-01-langton %}#mcts_solver">MCTS solver</a>.
+  Let us suppose that the solver states that we are going to win the game.
+  If the game ends with a defeat, this means that there is a bug in the MCTS or the solver.
+</p>
+
+<h2> Conclusion </h2>
+
+<p>
+  In this article, I introduced a VS Code extension and a starter project to quickly start to write C++ bots for CodinGame on your computer.
+  With those, you can write bots in multiple files, enable indexing, configure and build bots locally, and more.
+  I also mentioned how to exploit replays to improve your bot and to make replays even more powerful.
+</p>
+
+<p>
+  With such tools, I have seen my efficiency, as well as my ranking, improved.
+  I hope it would be the same for you!
+  Again, if you have any issues or any suggestions, please let me know.
+  You can reach me on GitHub for the extension or the starter project.
+</p>
