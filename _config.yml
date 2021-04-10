@@ -76,7 +76,7 @@ footer:
   links:
     - label: "Email"
       icon: "far fa-envelope"
-      url: "mailto:admin@virtual-atom.com"  
+      url: "mailto:admin@virtual-atom.com"
     - label: "Twitter"
       icon: "fab fa-twitter"
       url: "https://twitter.com/AtomDelame"
@@ -92,6 +92,7 @@ description: >
 
 # Build settings
 markdown: kramdown
+show_drafts: false
 plugins:
   - jekyll-feed
   - jekyll-paginate
