@@ -254,12 +254,12 @@ while( !state.finished() ) {
   if( current.child_count == 0 ) break;
 
   NodeSelecter selecter1{ current };
-  for( uint16_t i = 0; i < current.child_count && !selecter1.finished(); ++i )
+  for( uint16_t i = 0; i &lt; current.child_count && !selecter1.finished(); ++i )
     selecter1.add( current.left_child + i );
   auto& p0 = nodes[selecter1.best_node_index];
 
   NodeSelecter selecter2{ p0 };
-  for( uint16_t i = 0; i < p0.child_count && !selecter2.finished(); ++i )
+  for( uint16_t i = 0; i &lt; p0.child_count && !selecter2.finished(); ++i )
     selecter2.add( p0.left_child + i );
   node_index = selecter2.best_node_index;
 
