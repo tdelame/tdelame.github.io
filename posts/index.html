@@ -6,11 +6,29 @@ title: Posts
 {% for post in paginator.posts %}
 
 <article class="post-preview" itemscope itemtype="https://schema.org/CreativeWork">
+
+  {% if post.background %}
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-4 align-self-center">
+        <img src="{{ post.background | prepend: site.baseurl | replace: '//', '/' }}" class="rounded img-fluid">
+      </div>
+      <div class="col-lg-8 post-preview" >
+        <a href="{{ post.url | prepend: site.baseurl | replace: '//', '/' }}">
+          <h3 class="post-title" itemprop="headline"> {{ post.title }} {% if post.subtitle %} - {{ post.subtitle }} {% endif %} </h3>
+          <p class="post-description" itemprop="description">{{ post.description | strip_html }} </p>
+        </a>
+        <p class="post-meta">Posted by {{ site.author.name }} on {{ post.date | date: '%B %d, %Y' }} </p>
+      </div>
+    </div>
+  </div>
+  {% else %}
   <a href="{{ post.url | prepend: site.baseurl | replace: '//', '/' }}">
     <h3 class="post-title" itemprop="headline"> {{ post.title }} {% if post.subtitle %} - {{ post.subtitle }} {% endif %} </h3>
     <p class="post-description" itemprop="description">{{ post.description | strip_html }} </p>
   </a>
   <p class="post-meta">Posted by {{ site.author.name }} on {{ post.date | date: '%B %d, %Y' }} </p>
+  {% endif %}
 </article>
 
 <hr>

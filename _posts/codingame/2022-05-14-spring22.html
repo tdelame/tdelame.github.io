@@ -1,0 +1,313 @@
+---
+layout: post
+title: "Spring Challenge 2022"
+subtitle: "Heuristics on Spider Attack"
+date: 2022-05-14 16:55:00 +0200
+background: '/assets/media/spring22/background.jpg'
+has_code: true
+seo_title: "Restrospective on CodinGame Spring Challenge 2022"
+seo_teaser: "/assets/media/spring22/background.jpg"
+description: Writing and validating heuristics to reach the legend league
+
+published: true
+sitemap: true
+category: CodinGame
+tags:
+  - CodinGame
+  - Contest
+  - Retrospective
+  - Heuristics
+  - Testing
+---
+
+<p>
+  From April 21 to May 2, 2022, there was a programming contest on CodinGame.
+  My initial objective for that contest was to pass legend and be in the top 100.
+  When I first saw the game rules, my objective became to pass legend <strong>OR</strong> be in the top 100 &#128514;, as I knew that contest would be hard for me:
+</p>
+<ul>
+  <li> I'm inefficient at heuristic-friendly games (I mean games where usual search algorithms are not overpowered), as I tend to lose myself in the task complexity </li>
+  <li> I mostly focused on search algorithms before that contest, so tuning and evaluating heuristics remained quite obscure to me. </li>
+</ul>
+
+<p>
+  There was a high probability that I would rage-quit this contest.
+  Since I consider competitive programming a way to improve professional programming, I did not want that to happen.
+  As in the <a href="{% post_url /codingame/2021-06-06-spring21 %}">previous contest</a>, I made a conscient effort to sketch a plan of action to reach my goal.
+  Sticking to that plan helped me to remain sane and progress toward the legend league.
+</p>
+
+<p>
+  This article gathers my feedback on the contest and the steps I followed to increase my ranking.
+</p>
+
+<h2>1. Analysis of the Game</h2>
+
+<p>
+  Here are the simplified rules of the game, named <a href="https://www.codingame.com/multiplayer/bot-programming/spring-challenge-2022">Spider Attack</a>.
+  It's a two-player game where each player controls three heroes.
+  Those heroes can move around a large map to protect a base from spiders' attacks.
+  Spiders move from four spawning points outside the game map, with initial random direction, and initial health increasing over time.
+  Whenever a spider is inside a player base, it will target that base.
+  If the spider reaches the central part of a base, the corresponding player loses one life.
+  Once a player loses three lives, the game is over.
+</p>
+
+<p>
+  A hero can prevent a spider from attacking a base with different actions:
+</p>
+<ul>
+  <li>get closer to a spider such that the hero can hit it, for each hit point, the spider's health decreases, and the player's mana increases. Once the spider's health reaches zero, the spider is killed and removed from the game.</li>
+  <li>cast a wind spell such that the spider is expelled further from the base, when the spider is thrown far away from the base, it won't target it anymore but instead chose a random direction.</li>
+  <li>cast a control spell on the spider to choose what will be its next velocity, preventing it from going toward a base and targetting it.</li>
+</ul>
+
+<div>
+  <div class="text-center">
+    <img class="img-fluid" src="{{"/assets/media/spring22/wind.jpg" | relative_url }}" alt="Pushing spiders by casting a wind spell">
+  </div>
+  <span class="caption text-muted">Effects of casting a wind spell in the up direction. The two spiders are in the area of effect and are pushed 2200 units upward.
+    For reference, a spider moves 400 units each turn, so the wind spells are quite effective to expel spiders.</span>
+</div>
+
+<p>
+  With three heroes in defense, it's very unlikely to lose a life.
+  In case both players have the same life amount after 220 turns, the winner is the player that collected the most mana outside of the base, called wild mana.
+  However, wild mana collected by either the player or the opponent is unknown.
+  So attacking the opponent seems a better tactic:
+</p>
+<ul>
+  <li>control spiders toward the enemy base to increase the defense difficulty </li>
+  <li>control defenders outside of the base to give a higher chance to spiders to reach the opponent's base </li>
+  <li>wind spiders toward the opponent's base </li>
+  <li>cast a shield spell on spiders directed toward the enemy base, such that they are insensitive to wind and control for 12 turns. </li>
+</ul>
+<p>
+  Heroes can also be shielded, such that they won't be controlled or winded out by the opponent.
+  The game has a fog of war: a player can see spiders and the opponent's heroes only around the base or around its heroes.
+</p>
+
+<div>
+  <div class="text-center">
+    <img class="img-fluid" src="{{"/assets/media/spring22/replay.gif" | relative_url }}" alt="Classical 2-attackers 1-defender game">
+  </div>
+  <span class="caption text-muted">Both players used the classical 2-defenders 1-attacker strategy. We can see that having a hero (in blue) guarding my base because an attacker (in red) has been spotted helped me to keep my three lives.</span>
+</div>
+
+<p>
+  The game mechanics are interesting.
+  They are multiple strategies to win and it's possible to switch from different strategies depending on the context (remaining life, attacker spotted, large mana amount, etc...). There was however an overpowered mechanic: wind spells are stacked. When a single wind spell is cast, spiders and opponents in the spell effect area are pushed away for 2200 space units.
+  When all three heroes of the same player cast wind spell in the same area, affected entities are pushed away for 6600 space units.
+  The base visibility radius is 6000 space units, so an opponent could send spiders directly to the base center in one turn, without being seen.
+  I decided to ignore such <strong>wind canons</strong>, as I thought it won't be necessary to reach the legend league.
+</p>
+
+<h2>2. Going to the Gold League</h2>
+
+<p>
+  Fortunately, going to the gold league was easy for this contest, even though I'm struggling with heuristic-friendly games.
+  As always, I started with a short-sighted greedy heuristic algorithm
+  (i.e. consider only immediate action, without planning many turns, score those actions, and pick the best action for any available hero).
+  To do so, I sorted the list of visible spiders like so:
+</p>
+<ul>
+  <li> first, spiders that are targetting my base, sorted by increased distance to my base </li>
+  <li>second, spiders that would eventually target my base if they maintain their direction, sorted by increased distance to my base,</li>
+  <li>then, all remaining spiders, not sorted.</li>
+</ul>
+<p>
+  I took the first three sorted spiders and assigned a hero to each of them.
+  Since heroes move twice as fast as spiders, I did not compute interception trajectories to reach a spider.
+  Instead, I ordered each hero to move at the current position of their assigned spider.
+  That was enough to reach the bronze league.
+</p>
+
+<p>
+  As my heroes followed spiders toward my base, they did not farm wild mana.
+  I lose a lot of matches to players that were more often outside of the base than me.
+  I took care of that point by casting wind on spiders just before they entered my base.
+  Now, spiders are almost always outside of my base, so I naturally farm wild-mana with the same algorithm.
+  As I ended my matches with far too much mana, I decided to use it to annoy my opponent.
+  If a hero is not attacking a spider that will target my base, and there is a spider in range, send that spider with a control spell toward the opponent's base.
+  This increased the difficulty for defenders without cooperation to farm wild-mana without losing a life.
+</p>
+
+<p>
+  I tried to code an attacker, but I did not have enough free time to work on the contest anymore.
+  I settled for a really dumb attacker:
+</p>
+
+<ul>
+  <li>go at the edge of the opponent's base</li>
+  <li>wait for a spider to pass by,</li>
+  <li>send that spider to the opponent's base central point by casting a wind spell.</li>
+</ul>
+
+<p>
+  That's it, nothing fancy, no smart strategy or analysis.
+  I used a greedy algorithm to defend, a simple trick to increase the wild-mana farmed, and a stationary attacker.
+  This bot reached the gold league.
+  However, I knew it would remain quite far for the gold boss to reach the legend league.
+</p>
+
+<h2>3. Facing my Heuristics Nightmare</h2>
+<p>I tend to struggle with heuristics for four reasons:</p>
+<ul>
+  <li>assess locally if a change in the code improved the bot,</li>
+  <li>craft conditions and scores with numbers, e.g., what are the criteria to decide an attacker is a threat to our defense and should be removed?</li>
+  <li>combine those conditions and scores to create a consistent behavior, e.g., sometimes an attacker is less of a threat than a shielded healthy spider near the central part of my base, but how to quantify it?</li>
+  <li>organizing the code such that it remains readable and extensible.</li>
+</ul>
+
+<p>
+  Let us start with the first point.
+  Submits in the arena are so slow during a contest that you have to wait hours to assess the effect of a single change.
+  That's not a valid option during a time-limited event.
+  I usually rely on the full simulation of the game, since my search algorithm would use that simulation code anyway.
+  Also, the given referee on GitHub is in java, and I have not practiced that language since my engineering school days, I neved used the referee locally.
+  So I started to code a simulation that would serve for validation and maybe a search algorithm in C++.
+  I failed to obtain something usable due to bugs in the referee, incomplete information, weird logic, and fatigue (or maybe just fatigue &#128514;).
+  I foresaw that I will likely spend days validating my simulation and won't have time to use it for a search algorithm, provided I find a way to use a search for this game.
+  Instead, I spent many hours figuring out how to install java, the <a href="https://github.com/johnpage-agixis/SpringChallenge2022">game made compatible with brutaltester</a>, and its dependencies, run it locally, and use <a href="https://github.com/dreignier/cg-brutaltester">Magus' brutaltester</a>.
+  I felt ashamed I never tried to do it before.
+  It's so much simpler when you have the actual referee code. I may need to investigate how to make a referee compatible with brutaltester myself.
+</p>
+
+<p>
+  The remaining issue was how to use the local arena to validate that a change improved the bot performance?
+  For search-friendly games, you can get a good estimation of the improvement with the win rate of the new version versus the best to date version.
+  In such a game, going deeper in the search tree is enough to pick the best action to lead to a sure victory.
+  In this contest, I could not find any trivial way to ensure a bot improved.
+  I feel this is generally the case for heuristics-friendly games.
+  Instead, I thought to create multiple reference bots, using different strategies, and measure the performance of the tested version against all those bots
+</p>
+
+
+<p>
+  The next two points, i.e. crafting and combining conditions/scores, heavily depend on the testing capabilities.
+  Without testing, I would add bugged behaviors to the bot, such that it would become impossible to check if a change improves the bot:
+  since the bot behavior is unpredictable, the win rates would be random.
+  I believed that starting a bot from scratch would be the best solution if I want to reach higher and more stable win rates.
+</p>
+
+<p>
+  When I code heuristics, it quickly becomes an unmaintainable spaghetti plate.
+  It's then nearly impossible for me to tune a condition, combine behaviors or add considerations to the evaluation.
+  Some people might be able to handle that mess, but that's not my case &#128549;.
+  I needed to find a way to organize my code before rewriting a complete bot and reaching the legend league.
+</p>
+
+<h2>4. Structuring a Heuristic-Based Bot</h2>
+
+<p>
+  I finally figured out a way to structure a heuristic bot that works for me.
+  That organization may sound trivial to some or useless to others.
+  However, this organization helped me to overcome the code mess I usually produce when working with heuristics.
+  Here is the main method of the bot:
+</p>
+
+
+<pre><code class="language-cpp">void Bot::act(BotController& controller, Output& output) {
+  const int32_t total_remaining_time = 50'000 - 5000 - controller.elapsed();
+  const bool ready_attacker          = !state.players[me].heroes[0].controlled;
+  const uint8_t ready_defensers      = !state.players[me].heroes[1].controlled + !state.players[me].heroes[2].controlled;
+  const int32_t time_budget_per_hero = total_remaining_time / (ready_attacker + ready_defensers);
+
+  uint16_t available_mana = state.players[me].mana;
+  if (ready_defensers) available_mana = defense(controller, output, available_mana, time_budget_per_hero * ready_defensers);
+  if (ready_attacker ) available_mana = attack (controller, output, available_mana, time_budget_per_hero * ready_attacker );
+}</code></pre>
+
+<p>
+  Nothing fancy yet: that function helps me to separate the code for defenders and the attacker while estimating how much time I could allocate to each hero.
+  Each sub-method takes available mana as a parameter and returns how much mana is available for subsequent steps.
+  By deciding actions to perform for defenders first, I can ensure I won't lack mana to cast wind to avoid losing a life.
+</p>
+
+<p>
+  Each sub-method is composed of three steps.
+  First, collect data to consider for assigning goals to heroes.
+  Second, analyze that data to produce goal assignments for each available hero.
+  Lastly, find the best way to implement the assigned goal for each hero.
+  Let's focus on the defense function to illustrate this organization.
+  The first step could collect all recently seen opponents near my base, compute the future positions of spiders near my base, store the date at which a spider will leave the map or reach my base center, and collect all my available defenders (not controlled at the current turn).
+  Next, I analyze this data to assign each hero one of the following goals:
+</p>
+<ul>
+  <li>defend, to handle spider threats while keeping an eye on what an attacker could do,</li>
+  <li>guard, stay in the base because an attacker is spotted, and handle spider threats if any,</li>
+  <li>handle attacker, when an attacker is about to mess my defense (e.g. by casting a wind on a healthy spider toward my base), try to cancel the wind effect while throwing the attacker out of my base</li>
+  <li>farm, deal damage to spiders to increase wild mana.</li>
+</ul>
+
+<p>
+  Finally, for each assigned goal I use the allowed time to find the best way to implement it.
+  For farming, I use a Monte-Carlo algorithm to find the next two moves that will maximize the collected mana.
+  If no spider is in range for the next two turns, I move the hero to a hardcoded position where it has an increased chance to spot spiders entering the map after being spawned or spiders that will soon target my base.
+</p>
+
+<p>
+  I enjoy this organization as I find it easier to add considerations, tweak the goal assignment, or test new tactics to implement assigned goals.
+  It helped me with my difficulties to craft and combine conditions into a consistent behavior.
+  I will play with such organizations in other games to overcome my aversion to heuristic-friendly games &#128524;.
+</p>
+
+<h2>5. Going to the Legend League</h2>
+
+<p>
+  Having a code organization and a way to test a bot locally, it was time to design a better bot to reach the legend league.
+  I decided to write first an efficient defensive bot, that uses only two heroes (the last one remains idle).
+  The rationale was it would be easier to assess the strength of the defense, push it to a nice level, then assess the strength of the attack part.
+  To measure the strength of the bot, I compute its win rate against five other bots I wrote:
+</p>
+<ul>
+  <li>the <code>DEFEND</code> bot, which is my bronze bot, where all three heroes are attacking the closest threatening spiders,</li>
+  <li>the <code>FARM</code> bot, which is my silver-bottom gold bot, where heroes wind spiders out of my base to better farm wild mana, </li>
+  <li>three variations of my mid-gold bot, <code>MIXED1</code>, <code>MIXED2</code>, and <code>MIXED3</code>, with two defenders and one dumb attacker.</li>
+</ul>
+
+<p>
+  I improved my defense code until the bot largely beats the <code>DEFEND</code> bot.
+  That meant that I could assign my idle hero to attack without weakening my defense.
+  I ignored the <code>FARM</code> bot, as it was too much at an advantage with three heroes to farm wild mana and defend.
+  I continued to improve the defense code until the win rates against all mixed versions were above 20%, meaning my defense was good enough to face sustained attacks.
+  Writing the defense code required a lot of discipline as the weakness of my arena bot was clearly the attack.
+</p>
+
+<div>
+  <div class="text-center">
+    <img class="img-fluid" src="{{"/assets/media/spring22/ranking.png" | relative_url }}" alt="Final ranking">
+  </div>
+  <span class="caption text-muted">My final ranking. I managed to remain in the top 100 up to Monday morning, but my bot did not perform well in the general resubmission.</span>
+</div>
+
+<p>
+  Next, I wrote the code for the attacker, testing one idea at a time by measuring the win rates against the five bot versions.
+  I decided that the attacker code would be ready if the win rates against all five bot versions were above 90%.
+  Fun fact, with a really borked attacker hero, I already met that objective.
+  I decided the submit the bot to the arena and it passed legend on Saturday, to my great amusement &#129325;.
+  Ashamed by the bot replays in the legend league, I decided to spend some time on Sunday to fix the attacker.
+</p>
+
+
+<h2>Conclusion</h2>
+
+<p>
+  This contest was a very nice one.
+  Having a heuristic-friendly game is not a bad idea as it seems easier for beginners or non-professional developers.
+  However, this requires a much faster submission.
+  Submits took hours to complete, making testing ideas quite hard.
+  Decreasing the number of matches per submission is not the solution.
+  The ranking system is already unstable, even more with a heuristic-friendly game.
+  The situation would be worse with fewer matches to measure a bot performance.
+</p>
+
+<p>
+  There are many ideas I have not tested or improvements I have not done.
+  But this is not only due to the sluggishness of submissions.
+  I am noticeably slow to write a bot as good as the ones of top 100 players &#128530;.
+  I then run out of time to improve my bot to secure my place in the top 100 or reach an even better ranking.
+  My slowness is less noticeable when I write search algorithms:
+  I am good at optimizing, so my algorithm performs more iterations per turn than other players, mitigating my lack of heuristic to guide the search.
+  I will focus on producing better bots faster.
+</p>
