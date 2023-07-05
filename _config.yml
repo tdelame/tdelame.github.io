@@ -52,8 +52,8 @@ analytics:
 author:
   name: "Tom Delame"
   avatar:  /assets/medial/avatar.jpg
-  bio: "R&D software engineer in Computer Graphics in Paris area, code lover, video game addict. I code game AI for fun."
-  location: "Paris area"
+  bio: "R&D software engineer in Computer Graphics in Strasbourg area, code lover, video game addict. I code game AI for fun."
+  location: "Strasbourg area"
   links:
     - label: "Email"
       icon: "far fa-fw fa-envelope-square"
@@ -88,7 +88,7 @@ footer:
       url: "https://www.linkedin.com/in/thomas-delame"
 
 description: >
-  R&D software engineer in Computer Graphics in Paris area, code lover, video game addict. I code game AI for fun.
+  R&D software engineer in Computer Graphics in Strasbourg area, code lover, video game addict. I code game AI for fun.
 
 # Build settings
 markdown: kramdown
