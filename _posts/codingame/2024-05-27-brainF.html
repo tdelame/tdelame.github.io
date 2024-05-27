@@ -107,8 +107,10 @@ tags:
 <table class="table table-dark table-striped table-sm">
   <caption class="text-center">Baseline scores on validators </caption>
   <thead>
-    <th scope="col">Level</th>
-    <th score="col" class="text-right">Score</th>
+    <tr>
+      <th scope="col">Level</th>
+      <th scope="col" class="text-right">Score</th>
+    </tr>
   </thead>
 
   <tbody>
@@ -187,8 +189,9 @@ tags:
 <table class="table table-dark table-striped table-sm">
   <caption class="text-center">Monte Carlo algorithm with memory initialization. The total score is <code>7 344</code>.</caption>
   <thead>
-    <th scope="col">Level</th>
-    <th score="col" class="text-right">Score</th>
+    <tr>
+      <th scope="col">Level</th> <th scope="col" class="text-right">Score</th>
+    </tr>
   </thead>
   <tbody>
     <tr> <th scope="row">00 - Sample 1                                          </th> <td class="text-right">    50</td></tr>
@@ -256,8 +259,9 @@ tags:
 <table class="table table-dark table-striped table-sm">
   <caption class="text-center">The previous bot with 17 levels (in green) hardcoded to manually found solutions. The total score is <code>4 449</code>.</caption>
   <thead>
-    <th scope="col">Level</th>
-    <th score="col" class="text-right">Score</th>
+    <tr>
+      <th scope="col">Level</th> <th scope="col" class="text-right">Score</th>
+    </tr>
   </thead>
   <tbody>
     <tr> <th scope="row">00 - Sample 1                                          </th> <td class="text-right" style="color:green">    28</td></tr>
@@ -293,7 +297,7 @@ tags:
   I knew it would limit me if I tried to compete with the top performers of this game, but this decision made the task easier. 
   I wrote a <code>StateChange</code> data structure to describe the effect of such a step.
   You notice that I do not manipulate brainf**k expression directly.
-  <br/>
+  <br>
   <button class="bt btn-primary" type="button" data-toggle="collapse" data-target="#statechange" aria-expanded="false" aria-controls="statechange">
     Show/Hide State Change Code
   </button>
@@ -322,7 +326,7 @@ tags:
   This <code>StateChange</code> structure takes into account shortcuts for updates (relying on value wrapping to use fewer characters, fast reset to <code>0</code> with <code>[+]</code>, and fast increase/decrease by <code>12</code> and <code>13</code>)
   and moves (relying on memory address wrapping, jumping over nonzero values with <code>[>]</code> and <code>[&lt;]</code>) when computing the instruction cost or converting to brainf**k expression.
   A <code>State</code> structure holds the cell values and the memory pointer address of the brainf**k machine and accepts <code>StateChange</code> parameters to apply changes or convert to brainf**k expression.
-  <br/>
+  <br>
   <button class="bt btn-primary" type="button" data-toggle="collapse" data-target="#state" aria-expanded="false" aria-controls="state">
     Show/Hide State Code
   </button>  
@@ -357,7 +361,7 @@ tags:
 
 <p>
   With these two data structures, I wrote some change selection algorithms, namely a random one, a baseline one, and a greedy one.
-  <br/>
+  <br>
   <button class="bt btn-primary" type="button" data-toggle="collapse" data-target="#nextstate" aria-expanded="false" aria-controls="nextstate">
     Show/Hide Next State Code
   </button>  
@@ -452,9 +456,11 @@ StateChange next_greedy(const State &state, const uint8_t value, const bool with
 <table class="table table-dark table-striped table-sm">
   <caption class="text-center">Scores of the genetic algorithm and beam search on the 6 levels without a manually hardcoded solution.</caption>
   <thead>
-    <th scope="col">Level</th>
-    <th score="col" class="text-right">Genetic Algorithm</th>
-    <th score="col" class="text-right">Beam Search</th>
+    <tr>
+      <th scope="col">Level</th>
+      <th scope="col" class="text-right">Genetic Algorithm</th>
+      <th scope="col" class="text-right">Beam Search</th>
+    </tr>
   </thead>
   <tbody>
     <tr> <th scope="row">01 - Short spell                                       </th> <td class="text-right">   127</td><td class="text-right">   119</td></tr>
@@ -478,7 +484,7 @@ StateChange next_greedy(const State &state, const uint8_t value, const bool with
   I chose to compute the score after <code>K</code> greedy algorithm steps: a node adding more instructions now, but that allows later a better result would be selected.
   I stopped the optimization game at this point, with <code>2 094</code> instructions at rank <code>#11</code>.
 
-  <br/>
+  <br>
   <button class="bt btn-primary" type="button" data-toggle="collapse" data-target="#finalscores" aria-expanded="false" aria-controls="finalscores">
     Show/Hide Final Scores
   </button>  
@@ -488,8 +494,10 @@ StateChange next_greedy(const State &state, const uint8_t value, const bool with
 <table class="table table-dark table-striped table-sm">
   <caption class="text-center">Final scores, with <code>2 904</code> instructions, reaching the <code>#11</code> rank.</caption>
   <thead>
-    <th scope="col">Level</th>
-    <th score="col" class="text-right">Score</th>
+    <tr>
+      <th scope="col">Level</th>
+      <th scope="col" class="text-right">Score</th>
+    </tr>
   </thead>
   <tbody>
     <tr> <th scope="row">00 - Sample 1                                          </th> <td class="text-right" style="color:green">    28</td></tr>
