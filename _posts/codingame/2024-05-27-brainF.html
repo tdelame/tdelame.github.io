@@ -1,0 +1,539 @@
+---
+layout: post
+title: "Golfing in brainf**k"
+subtitle: "Reconciling with Genetic Algorithms"
+date: 2024-05-27 13:55:00 +0200
+background: '/assets/media/brainF/cover.png'
+has_code: true
+seo_title: "Golfing in brainf**k"
+seo_teaser: "/assets/media/brainF/cover.png"
+description: Optimizing solutions with the brainf**k language
+
+published: true
+sitemap: true
+category: CodinGame
+tags:
+  - CodinGame
+  - Genetic Algorithm
+  - Beam Search
+  - Pattern
+  - Golf
+  - brainfuck
+  - brainf
+---
+
+<p>
+  I've always been eager to solve problems and work on challenging tasks. 
+  My current position at Epic Games meets these needs well. 
+  But recently, I was on vacation for an extended period, and I wanted a brain teaser to keep my mind busy during those days. 
+  I chose an optimization game on CodinGame, the <a href="https://www.codingame.com/multiplayer/optimization/code-of-the-rings">Code of the Ring</a>, for such a purpose.
+  Simply said, this game is a <a href="https://esolangs.org/wiki/Brainfuck">brainf**k</a> golfing: given an input text, you have to output that text on a brainf**k machine with the least instruction possible.
+  I had a lot of fun with it.
+  This post will describe my thought process, errors, and successes in solving this optimization game.
+</p>
+
+<h2>1. Introduction and Goals </h2>
+
+<p>
+  The brainf**k machine we are interested in has a memory of <code>30</code> cells.
+  Those cells are registries containing values. 
+  A value of <code>0</code> describes a space, and values between <code>1</code> and <code>26</code> describe characters from <code>A</code> to <code>Z</code>.
+  This machine has a pointer on this memory, initialized to the first cell.
+  We can increase the address of the pointer with the command <code>&gt;</code>, moving the pointer to the next cell, and decrease it with <code>&lt;</code>, moving the pointer to the previous cell.
+  Addresses are wrapping: moving left while on the first cell places the pointer on the last memory cell, and moving right at the last memory cell puts it on the first cell.
+  The value pointed can be increased by <code>+</code> and decreased by <code>-</code>.
+  Values are also wrapping: decreasing a space results in a <code>Z</code>, and increasing a <code>Z</code> creates a space. 
+  A <code>.</code> command will output the character signified by the cell at the pointer. 
+  Lastly, the brainf**k language has a loop mechanism: <code>[</code> jumps past the matching <code>]</code> in the command buffer if the cell at the pointer is <code>0</code>, and <code>]</code> jumps back to the matching <code>[</code> if the cell at the pointer is nonzero.
+</p>
+
+<p>
+  The objective of this optimization game is to build the minimal command buffer to output a given input text. 
+  We know the input text for <code>24</code> test levels.
+  The <code>23</code> levels used to compute the final scores have hidden input text. 
+  This game has been completed at <code>100%</code> by <code>6805</code> people, and the best contestant is <code>dbdr</code> with a score of <code>2756</code>. 
+</p>
+
+<p>
+  I've set the following goals for this optimization game:
+</p>
+<ul>
+  <li> use a deterministic baseline algorithm that passes all levels</li>
+  <li> use a search algorithm to find better solutions </li>
+  <li> detect the current level and retrieve hidden validator input text </li>
+  <li> hardcode sequence and repetition manually </li>
+  <li> reach the top <code>1%</code>, which was held by <code>lechium06_</code> at rank <code>#68</code></li>
+</ul>
+<p>
+  At first, I thought I was too ambitious with the top <code>1%</code> goal. 
+  However, things went much smoother than expected.
+  Still, I made some mistakes that complexified the last improvements.
+  I have a project, goals, and a time frame; let's start!
+</p>
+
+<h2>2. Writing a Baseline Algorithm </h2>
+
+<p>
+  I wanted an algorithm that may not be the brightest but guarantees that the same solution will always be found in a finite amount of time.
+  I could then use this algorithm to measure improvements, provide a fallback solution when other algorithms fail, and retrieve hidden validator input texts.
+</p>
+
+<p>
+  What would be the most straightforward and safest algorithm to use as a baseline? 
+  I chose to process each input text character one by one. 
+  Subsequent sections will show that I carried over this decision, which caused some issues for me. 
+  However, I believe this decision remains valid until a search algorithm is fully operational. 
+  When processing character <code>C</code>, move to a cell containing <code>C</code> if such a cell exists, or move to the closest cell containing zero otherwise and update its value to <code>C</code>.
+  Then output the current cell, thus sending <code>C</code> in the output buffer. 
+  When all characters are processed, the message is completely sent. Neat!
+</p>
+
+<p>
+  I thought this algorithm would be too simple to succeed in all the validator tests.
+  There are some limitations to the number of executed instructions, and I never bothered with them.
+  Surprisingly, it scored <code>8 062</code>, reaching the <code>#4 482</code> rank (top <code>66%</code>, bottom <code>34%</code>), which is pretty decent for the first version.
+</p>
+
+<p>
+  I wrote a simulator to execute a sequence of brainf**k instructions.
+  Apart from being useful for quickly testing ideas and being the core of future search algorithms, this allowed me to get my score per level.
+  Indeed, optimization games do not provide you with a report per level; you only see which levels passed/failed and the total score. 
+  Due to the simplicity of the brainf**k language, writing the simulator was easy. 
+  See the table below of the baseline results on validator levels. 
+  The baseline scores are the same on the test input, except for the last one (the final validator input has fewer characters than the final test input). 
+  Thus, you can compare your results on test levels with the table below if you have not yet retrieved hidden validator inputs.
+</p>
+
+<table class="table table-dark table-striped table-sm">
+  <caption class="text-center">Baseline scores on validators </caption>
+  <thead>
+    <th scope="col">Level</th>
+    <th score="col" class="text-right">Score</th>
+  </thead>
+
+  <tbody>
+    <tr> <th scope="row">00 - Sample 1                                          </th> <td class="text-right">   53</td></tr>
+    <tr> <th scope="row">01 - Short spell                                       </th> <td class="text-right">  200</td></tr>
+    <tr> <th scope="row">02 - One letter x15                                    </th> <td class="text-right">   27</td></tr>
+    <tr> <th scope="row">03 - Close letters                                     </th> <td class="text-right">   44</td></tr>
+    <tr> <th scope="row">04 - Edge of the alphabet                              </th> <td class="text-right">   25</td></tr>
+    <tr> <th scope="row">05 - One letter x31                                    </th> <td class="text-right">   32</td></tr>
+    <tr> <th scope="row">06 - Two letter word x20                               </th> <td class="text-right">  104</td></tr>
+    <tr> <th scope="row">07 - Far away letters                                  </th> <td class="text-right">  193</td></tr>
+    <tr> <th scope="row">08 - One letter x53 + one letter x38                   </th> <td class="text-right">  105</td></tr>
+    <tr> <th scope="row">09 - One letter x70                                    </th> <td class="text-right">   72</td></tr>
+    <tr> <th scope="row">10 - Ten letter word x8                                </th> <td class="text-right">  198</td></tr>
+    <tr> <th scope="row">11 - Medium spell                                      </th> <td class="text-right">  586</td></tr>
+    <tr> <th scope="row">12 - Seven letter word x26                             </th> <td class="text-right">  530</td></tr>
+    <tr> <th scope="row">13 - Long random sequence of 4 letters                 </th> <td class="text-right">  260</td></tr>
+    <tr> <th scope="row">14 - Incremental sequence of 18 letters                </th> <td class="text-right">  117</td></tr>
+    <tr> <th scope="row">15 - Entire alphabet x11 separated by one letter       </th> <td class="text-right">  809</td></tr>
+    <tr> <th scope="row">16 - One same letter + a random letter x32             </th> <td class="text-right">  534</td></tr>
+    <tr> <th scope="row">17 - Incremental space separated sequence              </th> <td class="text-right">  258</td></tr>
+    <tr> <th scope="row">18 - Pattern followed by other pattern                 </th> <td class="text-right">  319</td></tr>
+    <tr> <th scope="row">19 - Pattern followed by random sequence of two letters</th> <td class="text-right">  313</td></tr>
+    <tr> <th scope="row">20 - Two patterns repeated randomly                    </th> <td class="text-right">  355</td></tr>
+    <tr> <th scope="row">21 - Pattern followed by incremental sequence          </th> <td class="text-right">  399</td></tr>
+    <tr> <th scope="row">22 - Long spell                                        </th> <td class="text-right">2 549</td></tr>
+  </tbody>
+</table>
+
+<p> 
+  This step cleared my first goal; four more to go!
+</p>
+
+<h2>3. Fiddling with an Embryonic search algorithm </h2>
+
+<p>
+  My baseline algorithm sits idle for most of the two seconds allowed for computation time. 
+  I wanted to know how well a Monte Carlo algorithm would perform on this task, so I wrote a modified baseline algorithm that randomly chooses the zero cell to update to match the current character.
+  The Monte Carlo algorithm initializes the best solution with the baseline output and then applies the modified baseline until it runs out of time. 
+  It represented a <code>4.6%</code> score / <code>~350</code> instructions / <code>95</code> ranks improvement for a copy-paste and a five-line code change.
+  If only it could be that easy at work!
+</p>
+
+<p>
+  I've allowed the Monte Carlo algorithm to run 20 times longer to check for result improvement. 
+  I also added an early exit to start another iteration when the current one produces an instruction sequence already longer than the shortest known solution. 
+  Unfortunately, it did not significantly change the results, hinting that the search space is too ample for a fully generic Monte Carlo algorithm to do wonders. 
+  We must to guide the search algorithm among all the possibilities to find the best ones. 
+</p>
+
+<p>
+  I already restrained my search algorithm by my choice for the baseline: each algorithm step outputs a single character. 
+  A step is composed of a sequence of three phases: 
+    <code>Move(m)</code> moves the memory pointer by <code>-14 ≤ m ≤ 15</code> cells,
+    <code>Update(u)</code> increments the value in the current cell by <code>-13 ≤ u ≤ 13</code>,
+    and <code>Commit</code> sends the value of the current cell to the output.
+  How can I extend the expression produced by a step to reach better scores?
+</p>
+
+<p>
+  I was astonished by the score on the long spell level. 
+  It accounts for <code>92%</code> of <code>dbdr</code>'s total score. 
+  For a word of <code>361</code> characters, it makes <code>2043</code> pointer moves; that's <code>80%</code> of moves.
+  With the baseline algorithm, we always end up with a sequence of memory cells containing zero values. 
+  Crossing this contiguous memory region can cost a lot of pointer moves. 
+  I wondered if it would help to have a different value instead of zero in such a region. 
+  To test this idea, I allowed a step to prepend two other phrases: 
+    an <code>Update(u)</code>, followed by <code>UpdateLoop(is_right, is_up)</code>,
+    where <code>UpdateLoop(true, true)</code> is <code>[>+]</code>, <code>UpdateLoop(true, false)</code> is <code>[>-]</code>,
+    <code>UpdateLoop(false, true)</code> is <code>[&lt;+]</code> and <code>UpdateLoop(false, false)</code> is <code>[&lt;-]</code>. 
+  If unsure about these phases' effects, try <code>+++[>+]</code> in the CodinGame's IDE to understand what it does. 
+  I added a parameter with this initial value to the baseline and the modified baseline algorithms: they use this parameter to create a first step with the four phases.
+  Adding loops over possible initialization values, I improved my results <code>4.6%</code> score / <code>~370</code> instructions / <code>69</code> ranks.
+</p>
+  
+<table class="table table-dark table-striped table-sm">
+  <caption class="text-center">Monte Carlo algorithm with memory initialization. The total score is <code>7 344</code>.</caption>
+  <thead>
+    <th scope="col">Level</th>
+    <th score="col" class="text-right">Score</th>
+  </thead>
+  <tbody>
+    <tr> <th scope="row">00 - Sample 1                                          </th> <td class="text-right">    50</td></tr>
+    <tr> <th scope="row">01 - Short spell                                       </th> <td class="text-right">   200</td></tr>
+    <tr> <th scope="row">02 - One letter x15                                    </th> <td class="text-right">    27</td></tr>
+    <tr> <th scope="row">03 - Close letters                                     </th> <td class="text-right">    44</td></tr>
+    <tr> <th scope="row">04 - Edge of the alphabet                              </th> <td class="text-right">    24</td></tr>
+    <tr> <th scope="row">05 - One letter x31                                    </th> <td class="text-right">    32</td></tr>
+    <tr> <th scope="row">06 - Two letter word x20                               </th> <td class="text-right">    97</td></tr>
+    <tr> <th scope="row">07 - Far away letters                                  </th> <td class="text-right">   193</td></tr>
+    <tr> <th scope="row">08 - One letter x53 + one letter x38                   </th> <td class="text-right">   105</td></tr>
+    <tr> <th scope="row">09 - One letter x70                                    </th> <td class="text-right">    72</td></tr>
+    <tr> <th scope="row">10 - Ten letter word x8                                </th> <td class="text-right">   198</td></tr>
+    <tr> <th scope="row">11 - Medium spell                                      </th> <td class="text-right">   564</td></tr>
+    <tr> <th scope="row">12 - Seven letter word x26                             </th> <td class="text-right">   530</td></tr>
+    <tr> <th scope="row">13 - Long random sequence of 4 letters                 </th> <td class="text-right">   251</td></tr>
+    <tr> <th scope="row">14 - Incremental sequence of 18 letters                </th> <td class="text-right">   117</td></tr>
+    <tr> <th scope="row">15 - Entire alphabet x11 separated by one letter       </th> <td class="text-right">   809</td></tr>
+    <tr> <th scope="row">16 - One same letter + a random letter x32             </th> <td class="text-right">   383</td></tr>
+    <tr> <th scope="row">17 - Incremental space separated sequence              </th> <td class="text-right">   258</td></tr>
+    <tr> <th scope="row">18 - Pattern followed by other pattern                 </th> <td class="text-right">   309</td></tr>
+    <tr> <th scope="row">19 - Pattern followed by random sequence of two letters</th> <td class="text-right">   313</td></tr>
+    <tr> <th scope="row">20 - Two patterns repeated randomly                    </th> <td class="text-right">   284</td></tr>
+    <tr> <th scope="row">21 - Pattern followed by incremental sequence          </th> <td class="text-right">   399</td></tr>
+    <tr> <th scope="row">22 - Long spell                                        </th> <td class="text-right"> 2 085</td></tr>
+  </tbody>
+</table>
+
+<p>
+  I knew the <code>[>]</code> and <code>[&lt;]</code> tricks to move the pointer to the nearest zero cell quickly, but I was reluctant to implement it at that time.
+  I needed to retrieve the hidden validator inputs to understand better what kind of inputs the search algorithm must solve.
+</p>
+
+<h2>4. Retrieving Hidden Validator Inputs </h2>
+
+<p>
+  Using the level names, I wrote code that detects which level a given validator input corresponds to.
+  I assumed input strings were the same length as the test levels. 
+  This assumption was correct for all but the long spell level (the validator input is one character less than the test input). 
+  When the code recognizes a level, it calls the baseline algorithm, otherwise it returns the empty string. 
+  Analyzing the submission reports, I quickly validated the detection code for all validator levels. 
+  Knowing the level and the input length, I needed to retrieve the characters for each level. 
+  I assumed there was some symmetry, such that test and validator levels have the same complexity. 
+  Again, this assumption was correct for all but the last validator. 
+</p>
+
+<p>
+  Usually, when retrieving hidden validator inputs on CodinGame, we can retrieve one bit of information per submission, i.e., if we failed or succeeded a level. 
+  I'll explain how we can retrieve more bits per level in this game. 
+  Suppose you produce a solution containing <code>N</code> characters for a level and want to know the first input character <code>C</code> of such a level.
+  Remember there are <code>27</code> possible characters, so you can encode <code>C</code> with a value <code>V</code> between <code>0</code> and <code>26</code>.
+  Append <code>></code> character <code>V</code> times to your <code>N</code>-length solution on that level, and let all other levels fail. 
+  The submission report gives you the <code>N + V</code> number; you only have to subtract <code>N</code> to know the first character <code>C</code>.
+  Using this trick and my assumptions above, getting all the hidden validator inputs was easy.
+</p>
+
+<p>
+  I did not want to code the solution manually for six levels: <code>1</code>, <code>7</code>, <code>11</code>, <code>13</code>, <code>16</code>, and <code>22</code>. 
+  It looked tedious and a better fit for the search algorithm. I found solutions by hand for the 17 other levels.
+  It took me a while, but I improved the score by <code>39%</code> / <code>2 895</code> instructions / <code>3 855</code> ranks.
+  I achieved two more of my goals and reached rank <code>463</code>.
+  All I needed was to improve my score on the remaining six levels by <code>27%</code> with a search algorithm to complete all my goals.
+</p>
+
+<table class="table table-dark table-striped table-sm">
+  <caption class="text-center">The previous bot with 17 levels (in green) hardcoded to manually found solutions. The total score is <code>4 449</code>.</caption>
+  <thead>
+    <th scope="col">Level</th>
+    <th score="col" class="text-right">Score</th>
+  </thead>
+  <tbody>
+    <tr> <th scope="row">00 - Sample 1                                          </th> <td class="text-right" style="color:green">    28</td></tr>
+    <tr> <th scope="row">01 - Short spell                                       </th> <td class="text-right">   200</td></tr>
+    <tr> <th scope="row">02 - One letter x15                                    </th> <td class="text-right" style="color:green">    20</td></tr>
+    <tr> <th scope="row">03 - Close letters                                     </th> <td class="text-right" style="color:green">    31</td></tr>
+    <tr> <th scope="row">04 - Edge of the alphabet                              </th> <td class="text-right" style="color:green">    21</td></tr>
+    <tr> <th scope="row">05 - One letter x31                                    </th> <td class="text-right" style="color:green">    12</td></tr>
+    <tr> <th scope="row">06 - Two letter word x20                               </th> <td class="text-right" style="color:green">    22</td></tr>
+    <tr> <th scope="row">07 - Far away letters                                  </th> <td class="text-right">   193</td></tr>
+    <tr> <th scope="row">08 - One letter x53 + one letter x38                   </th> <td class="text-right" style="color:green">    31</td></tr>
+    <tr> <th scope="row">09 - One letter x70                                    </th> <td class="text-right" style="color:green">    16</td></tr>
+    <tr> <th scope="row">10 - Ten letter word x8                                </th> <td class="text-right" style="color:green">    66</td></tr>
+    <tr> <th scope="row">11 - Medium spell                                      </th> <td class="text-right">   564</td></tr>
+    <tr> <th scope="row">12 - Seven letter word x26                             </th> <td class="text-right" style="color:green">    63</td></tr>
+    <tr> <th scope="row">13 - Long random sequence of 4 letters                 </th> <td class="text-right">   251</td></tr>
+    <tr> <th scope="row">14 - Incremental sequence of 18 letters                </th> <td class="text-right" style="color:green">    21</td></tr>
+    <tr> <th scope="row">15 - Entire alphabet x11 separated by one letter       </th> <td class="text-right" style="color:green">    19</td></tr>
+    <tr> <th scope="row">16 - One same letter + a random letter x32             </th> <td class="text-right">   383</td></tr>
+    <tr> <th scope="row">17 - Incremental space separated sequence              </th> <td class="text-right" style="color:green">    10</td></tr>
+    <tr> <th scope="row">18 - Pattern followed by other pattern                 </th> <td class="text-right" style="color:green">    77</td></tr>
+    <tr> <th scope="row">19 - Pattern followed by random sequence of two letters</th> <td class="text-right" style="color:green">   118</td></tr>
+    <tr> <th scope="row">20 - Two patterns repeated randomly                    </th> <td class="text-right" style="color:green">   177</td></tr>
+    <tr> <th scope="row">21 - Pattern followed by incremental sequence          </th> <td class="text-right" style="color:green">    41</td></tr>
+    <tr> <th scope="row">22 - Long spell                                        </th> <td class="text-right"> 2 085</td></tr>
+  </tbody>
+</table>
+
+<h2> 5. Writing a better search algorithm </h2>
+
+<p>
+  I chose early what expression a step of a search algorithm produces. 
+  I knew it would limit me if I tried to compete with the top performers of this game, but this decision made the task easier. 
+  I wrote a <code>StateChange</code> data structure to describe the effect of such a step.
+  You notice that I do not manipulate brainf**k expression directly.
+  <br/>
+  <button class="bt btn-primary" type="button" data-toggle="collapse" data-target="#statechange" aria-expanded="false" aria-controls="statechange">
+    Show/Hide State Change Code
+  </button>
+</p>
+
+<div class="collapse" id="statechange"><pre><code class="language-cpp">struct StateChange { // excerpt of the code I use
+  // pre-update: first Update(u) + UpdateLoop(is_right, is_up)
+  int8_t pre_update_delta     : 5; // parameter u of the first Update()
+  uint8_t pre_update          : 1; // skip this two phases if 0
+  uint8_t pre_update_right    : 1; // parameter is_right of UpdateLoop()
+  uint8_t pre_update_up       : 1; // parameter is_up of UpdateLoop()
+
+  // Move(m)
+  int8_t move_delta           : 5; // parameter m
+  uint8_t move_with_jump      : 1; // 1 if we use nonzero cell skips (used to convert to expression)
+  uint8_t move_with_jump_right: 1; // 1 if we use [>] to skip nonzero cells, 0 for [&lt;] (used to convert to expression)
+
+  // Update(u)
+  uint8_t new_value           : 5; // u = signed_distance(current_cell_value, new_value)
+
+  // How many characters are needed to express this change in brainf**k
+  uint8_t instruction_cost;
+};</code></pre></div>
+
+<p>
+  This <code>StateChange</code> structure takes into account shortcuts for updates (relying on value wrapping to use fewer characters, fast reset to <code>0</code> with <code>[+]</code>, and fast increase/decrease by <code>12</code> and <code>13</code>)
+  and moves (relying on memory address wrapping, jumping over nonzero values with <code>[>]</code> and <code>[&lt;]</code>) when computing the instruction cost or converting to brainf**k expression.
+  A <code>State</code> structure holds the cell values and the memory pointer address of the brainf**k machine and accepts <code>StateChange</code> parameters to apply changes or convert to brainf**k expression.
+  <br/>
+  <button class="bt btn-primary" type="button" data-toggle="collapse" data-target="#state" aria-expanded="false" aria-controls="state">
+    Show/Hide State Code
+  </button>  
+</p>
+
+<div class="collapse" id="state"><pre><code class="language-cpp">struct State { // excerpt of the code I use
+  Memory memory;
+  Position position;
+  uint16_t instruction_cost;
+
+  void apply(const StateChange change) {
+    if (change.pre_update) {
+      memory.update(position, change.pre_update_delta);
+
+      const int8_t direction = change.pre_update_right ? 1 : -1;
+      const int8_t increment = change.pre_update_up ? 1 : -1;
+      while (memory.get(position)) {
+        position += direction;
+        memory.update(position, increment);
+      }
+    }
+
+    position += change.move_delta;
+    memory.set(position) = change.new_value;
+    instruction_cost += change.instruction_cost;
+  }
+
+  // Same as above but convert change to brainf**k expression in an output structure
+  void apply(const StateChange change, Output &output);
+};</code></pre></div>
+
+
+<p>
+  With these two data structures, I wrote some change selection algorithms, namely a random one, a baseline one, and a greedy one.
+  <br/>
+  <button class="bt btn-primary" type="button" data-toggle="collapse" data-target="#nextstate" aria-expanded="false" aria-controls="nextstate">
+    Show/Hide Next State Code
+  </button>  
+</p>
+
+<div class="collapse" id="nextstate"><pre><code class="language-cpp">// Fully construct a state change, ensuring optimal instruction cost
+StateChange next(const State &state, const Position position, const uint8_t value);
+
+// Fully construct a state change with a pre-update, ensuring optimal cost
+StateChange next_with_pre_update(const State &state, const Position position, const uint8_t value,
+    const int8_t pre_update_delta, const bool pre_update_right, const bool pre_update_up);
+
+// Modified baseline algorithm 
+StateChange next_baseline(const State &state, const uint8_t value, 
+    const bool with_pre_update_loop, const int8_t pre_update_delta) {
+  for (int8_t index = 0; index &lt; constants::memory_size; ++index) {
+    if (state.memory.get(index) == value) {
+      return with_pre_update_loop && pre_update_delta 
+        ? next_with_pre_update_loop(state, index, value, pre_update_delta, true, true)
+        : next(state, index, value);
+    }
+  }
+
+  const Position destination = state.find_right_zero(state.position);
+  return with_pre_update_loop && pre_update_delta
+    ? next_with_pre_update_loop(state, destination, value, pre_update_delta, true, true)
+    : next(state, destination, value);
+}
+
+// Random change
+StateChange next_random(const State &state, Randomizer &randomizer, const uint8_t value, const bool with_pre_update_loop) {
+  const int8_t index = int8_t(randomizer.choice(constants::memory_size));
+  if (with_pre_update_loop) {
+    const int8_t pre_update_delta = int8_t(randomizer.choice(Runes::code_count) - 13);
+    const bool pre_update_right = randomizer.uniform() > 0.5f;
+    const bool pre_update_up = randomizer.uniform() > 0.5f;
+    return next_with_pre_update_loop(state, index, value, pre_update_delta, pre_update_right, pre_update_up);
+  }
+  return next(state, index, value);
+}
+
+// Greedy algorithm: find the change with the smallest instruction cost
+StateChange next_greedy(const State &state, const uint8_t value, const bool with_pre_update_loop) {
+  StateChange best = next(state, 0, value);
+  for (int8_t index = 1; index &lt; constants::memory_size; ++index) {
+    StateChange candidate = next(state, index, value);
+    if (candidate.instruction_cost &lt; best.instruction_cost) {
+      best = candidate;
+    }
+  }
+
+  if (with_pre_update_loop) {
+    for (int8_t index = 0; index &lt; constants::memory_size; ++index) {
+      for (int8_t update_delta = -13; update_delta &lt;= 13; ++update_delta) {
+        if (StateChange candidate_left = next_with_pre_update_loop(state, index, value, update_delta, false, true);
+            candidate_left.instruction_cost &lt; best.instruction_cost) {
+          best = candidate_left;
+        }
+
+        if (StateChange candidate_right = next_with_pre_update_loop(state, index, value, update_delta, true, true); 
+            candidate_right.instruction_cost &lt; best.instruction_cost) {
+          best = candidate_right;
+        }
+      } 
+    }
+  }
+  return best;
+}</code></pre></div>
+
+<p>
+  I wrote a <a href="{% post_url /codingame/2023-07-05-mars %}">genetic algorithm template for the Mars Lander</a> optimization game.
+  I applied it to search for better state change sequences and minimize the instruction costs. 
+  With the genetic algorithm framework, a gene is a state change, and a chromosome is a state change sequence (a solution). 
+  The state change structure allows for simple crossovers and mutations. 
+  I was able to set up the whole genetic algorithm in one hour.
+  To my surprise, the first version of the genetic algorithm bot already reached the top <code>50</code> players.
+  I tweaked the genetic algorithm with a graphical visualizer application and searched for the best solutions offline. 
+  In the end, the genetic algorithm improved my score by <code>27%</code> in total / <code>32%</code> on the six levels to search / <code>1 203</code> instructions / <code>430</code> ranks.
+  With the score of <code>3 246</code> I was at rank <code>33</code>.
+</p>
+
+<p>
+  At this point, I reached all my goals. 
+  However, that seemed too easy, and I needed to learn more. 
+  The genetic algorithm was slow to progress. 
+  I kept a pool of the best-found chromosomes. 
+  When I removed one of such chromosomes, it could take the search algorithm a lot of time before finding it again. 
+  The graphical analyzer showed idiotic/random changes undermined the effects of a good change in a chromosome. 
+  For a good change to shine, many other good changes must be in the chromosome. This situation reminded me of the beam search algorithm.
+</p>
+
+<table class="table table-dark table-striped table-sm">
+  <caption class="text-center">Scores of the genetic algorithm and beam search on the 6 levels without a manually hardcoded solution.</caption>
+  <thead>
+    <th scope="col">Level</th>
+    <th score="col" class="text-right">Genetic Algorithm</th>
+    <th score="col" class="text-right">Beam Search</th>
+  </thead>
+  <tbody>
+    <tr> <th scope="row">01 - Short spell                                       </th> <td class="text-right">   127</td><td class="text-right">   119</td></tr>
+    <tr> <th scope="row">07 - Far away letters                                  </th> <td class="text-right">   184</td><td class="text-right">   167</td></tr>
+    <tr> <th scope="row">11 - Medium spell                                      </th> <td class="text-right">   313</td><td class="text-right">   284</td></tr>
+    <tr> <th scope="row">13 - Long random sequence of 4 letters                 </th> <td class="text-right">   250</td><td class="text-right">   236</td></tr>
+    <tr> <th scope="row">16 - One same letter + a random letter x32             </th> <td class="text-right">   215</td><td class="text-right">   201</td></tr>
+    <tr> <th scope="row">22 - Long spell                                        </th> <td class="text-right"> 1 384</td><td class="text-right"> 1 124</td></tr>
+  </tbody>
+</table>
+
+<p>
+  I wrote a simple beam search algorithm in which the heuristic used to select the best nodes is the partial score,
+  i.e., the number of brainf**k instructions needed to reach this state. Even with such a poor heuristic (or absence thereof, as I do not estimate the final cost),
+  the results were immediately better. 
+  I spent many hours tweaking the beam search, adding new possible states, better filtering, optimizing memory footprint for more extensive searches, and iteratively improving my score.
+  At some point, I was stuck by my choice for the state change: unable to experiment with more complex expressions, such as loop expressions containing commit instructions or using nearby cells to make fast update loops. 
+  My vacations were almost over, I achieved all my goals and wanted to finish this project soon, so I inserted a string field in the state change structure to represent a custom brainf**k expression. 
+  It was insufficient to describe any expression, but it helped me progress without rewriting everything. 
+  As I generate a lot of children when analyzing a node, a heuristic is vital to identifying suitable candidates; otherwise, the search favors nodes adding fewer instructions for the current depth (I call this a myopic heuristic, as it fails to see the benefits from afar). 
+  I chose to compute the score after <code>K</code> greedy algorithm steps: a node adding more instructions now, but that allows later a better result would be selected.
+  I stopped the optimization game at this point, with <code>2 094</code> instructions at rank <code>#11</code>.
+
+  <br/>
+  <button class="bt btn-primary" type="button" data-toggle="collapse" data-target="#finalscores" aria-expanded="false" aria-controls="finalscores">
+    Show/Hide Final Scores
+  </button>  
+</p>
+
+<div class="collapse" id="finalscores">
+<table class="table table-dark table-striped table-sm">
+  <caption class="text-center">Final scores, with <code>2 904</code> instructions, reaching the <code>#11</code> rank.</caption>
+  <thead>
+    <th scope="col">Level</th>
+    <th score="col" class="text-right">Score</th>
+  </thead>
+  <tbody>
+    <tr> <th scope="row">00 - Sample 1                                          </th> <td class="text-right" style="color:green">    28</td></tr>
+    <tr> <th scope="row">01 - Short spell                                       </th> <td class="text-right">   119</td></tr>
+    <tr> <th scope="row">02 - One letter x15                                    </th> <td class="text-right" style="color:green">    20</td></tr>
+    <tr> <th scope="row">03 - Close letters                                     </th> <td class="text-right" style="color:green">    31</td></tr>
+    <tr> <th scope="row">04 - Edge of the alphabet                              </th> <td class="text-right" style="color:green">    21</td></tr>
+    <tr> <th scope="row">05 - One letter x31                                    </th> <td class="text-right" style="color:green">    12</td></tr>
+    <tr> <th scope="row">06 - Two letter word x20                               </th> <td class="text-right" style="color:green">    22</td></tr>
+    <tr> <th scope="row">07 - Far away letters                                  </th> <td class="text-right">   167</td></tr>
+    <tr> <th scope="row">08 - One letter x53 + one letter x38                   </th> <td class="text-right" style="color:green">    31</td></tr>
+    <tr> <th scope="row">09 - One letter x70                                    </th> <td class="text-right" style="color:green">    16</td></tr>
+    <tr> <th scope="row">10 - Ten letter word x8                                </th> <td class="text-right" style="color:green">    66</td></tr>
+    <tr> <th scope="row">11 - Medium spell                                      </th> <td class="text-right">   284</td></tr>
+    <tr> <th scope="row">12 - Seven letter word x26                             </th> <td class="text-right" style="color:green">    63</td></tr>
+    <tr> <th scope="row">13 - Long random sequence of 4 letters                 </th> <td class="text-right">   236</td></tr>
+    <tr> <th scope="row">14 - Incremental sequence of 18 letters                </th> <td class="text-right" style="color:green">    21</td></tr>
+    <tr> <th scope="row">15 - Entire alphabet x11 separated by one letter       </th> <td class="text-right" style="color:green">    19</td></tr>
+    <tr> <th scope="row">16 - One same letter + a random letter x32             </th> <td class="text-right">   201</td></tr>
+    <tr> <th scope="row">17 - Incremental space separated sequence              </th> <td class="text-right" style="color:green">    10</td></tr>
+    <tr> <th scope="row">18 - Pattern followed by other pattern                 </th> <td class="text-right" style="color:green">    77</td></tr>
+    <tr> <th scope="row">19 - Pattern followed by random sequence of two letters</th> <td class="text-right" style="color:green">   118</td></tr>
+    <tr> <th scope="row">20 - Two patterns repeated randomly                    </th> <td class="text-right" style="color:green">   177</td></tr>
+    <tr> <th scope="row">21 - Pattern followed by incremental sequence          </th> <td class="text-right" style="color:green">    41</td></tr>
+    <tr> <th scope="row">22 - Long spell                                        </th> <td class="text-right">1 124</td></tr>
+  </tbody>
+</table></div>
+
+<h2>6. Conclusion</h2>
+
+<p>
+  This optimization game was really fun to play. 
+  Being able to search solutions manually helped me better grasp tricks for reducing the instruction number. 
+  The set of instructions generated by a search step I chose easily reached the top <code>1%</code>.
+  However, it hindered me from obtaining better scores; getting to rank <code>#11</code> took more work.
+  I should have switched to a beam search algorithm sooner and worked directly on brainf**k expressions or instructions. 
+  I wanted to avoid solving the evaluation of nodes having outputted a different number of characters. 
+  I'm always struggling with writing evaluation functions, and it forces me to find alternatives that might be suboptimal.
+  The eleventh rank is still a decent result, and I'd recommend going the same route if you struggle with evaluations.
+</p>
+
+<p>
+  I think I'll choose an optimization game again for my next project. 
+  Preferably, it should have post-mortems that mention the efficient use of hill climbing or beam search. 
+  As it was the case with MCTS (see <a href="{% post_url /codingame/2021-02-01-langton %}">Langton's Ant</a> and <a href="{% post_url /codingame/2021-06-06-spring21 %}">Spring 21 Contest</a>),
+  I feel I'm about to understand those search algorithms better, adding another string to my bow.
+</p>
