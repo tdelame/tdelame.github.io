@@ -1,0 +1,284 @@
+---
+layout: post
+title: "Fall Challenge 2024"
+subtitle: "Heuristic Path Planning in Selenia City"
+date: 2024-10-13 08:21:00 +0200
+background: '/assets/media/fall24/cover.jpg'
+has_code: true
+seo_title: "Retrospective on CodinGame Fall Challenge 2024"
+seo_teaser: "/assets/media/fall24/cover.jpg"
+description: Reaching the 40th place in an optimization contest
+
+published: true
+sitemap: true
+category: CodinGame
+tags:
+  - CodinGame
+  - Heuristic
+  - Contest
+  - Retrospective
+---
+
+<p> 
+  Between October 4th and October 10th, CodinGame hosted an optimization challenge. 
+  I was busy working then, but I wanted to participate. 
+  Even though I lacked the time to do as much as I wanted, I was happy with my results and had a lot of fun. 
+  I'm sure I will continue to fiddle with my solution to this challenge! 
+  In this post, I'll describe my approach to this challenge, what helped me to get through it, and some recommendations. 
+</p>
+
+<h2>1. Introduction </h2>
+
+<p>
+  I was so excited to see an optimization challenge on CodinGame. 
+  Optimization is my favorite activity on the platform (see previous articles on <a href="{% post_url /codingame/2023-07-05-mars %}">Mars Lander</a> and <a href="{% post_url /codingame/2024-05-27-brainF %}">Golfing in brainf**k</a> ^^).
+  I love seeing immediately if a code change would increase my score, unlike multiplayer games/contests where the ranking instability makes it harder to guess if you are going in the right direction.
+  I also enjoy fighting against myself or my code to get points rather than defeating other players' bots in matches.
+</p>
+
+<p>
+  It was the first optimization challenge I participated in. 
+  I knew I would need more tools or processes, but this challenge was the right occasion to acquire those. 
+  I focused on <b>time efficiency</b>: I wanted to get the best results for the number of hours I could spend on the challenge during that very busy period.
+  Such efficiency is a common aspect of my work, so I'm always keen to practice it.
+</p>
+
+<p>
+  As usual, as soon as I discovered the contest details, I sketched a plan and followed it.
+  It's a good habit to make decisions beforehand while I'm highly motivated, fully rested, and with the most brain power. 
+  Here are the main lines of my plan:
+</p>
+<ul>
+  <li>First, write a dumb generic greedy algorithm that achieves 100% success on test cases, using a one-tube pod between an input node and its destination (see <a href="#game">the next section</a> where I define those terms).</li>
+  <li>Then, improve this greedy algorithm with pods traveling on multiple tubes.</li>
+  <li>The last step is to find manual solutions to some levels. Then, pick the hand-mand solution with the most significant improvement compared to the greedy algorithm and write a procedure implementing it. If it works, add a function to detect this level and call the procedure directly. </li>
+  <li><b>Rule 1</b>: Do not try to write a search algorithm that simulate pods or astronauts. The pathing algorithm, a CodinGame special ingredient, looks like a nightmare to implement. I won't have the brain power or the time to do it right, and I'm unlikely to write a search bot that would outperform my abovementioned approach.</li>
+  <li><b>Rule 2</b>: Fork the referee, tweak it, and make it do the work for me. I'm unfamiliar with Java, so I knew it would take some time to settle a development environment for it and then build and run a modified version of it. I was confident in the end it would be more than helpful. </li>
+  <li><b>Rule 3</b>: Add an optimizer for fetching possible tubes from a given node, but do not optimize other things. It is doubtful I'd ever need more runtime performance.</li>
+</ul>
+
+<p>
+  All I had to do during this contest was to commit to this plan, and I'm pleased with the results :-&#125;.
+</p>
+
+<h2 id="game">2. The Game</h2>
+
+<p>
+  The game involves transferring astronauts from landing pads to their destination lunar modules. 
+  To simplify, it is similar to transferring resources from input nodes to destinations in a network.
+  Each non-input node has a type that determines which kind of resource it accepts. 
+  An input node can spawn resources of multiple types at the beginning of each turn. 
+  Whenever a resource reaches its destination, points are given depending on how long it took and how many resources already reached this node during a turn. 
+  There are 20 turns, and each of these turns lasts 20 days.
+</p>
+
+<div>
+  <div class="row">
+    <div class="text-center my-auto" style="width: 50%">
+      <img class="img-fluid rounded" src="{{"/assets/media/fall24/landing.gif" | relative_url }}" alt="Input node spawning four types of resources">
+    </div>
+    <div class="my-auto" style="width: 50%">
+      <img class="img-fluid rounded" src="{{"/assets/media/fall24/modtypes.png" | relative_url }}" alt="The twenty types of destination nodes, one for each resource type">
+    </div>
+  </div>
+  <span class="caption text-muted">
+    On the left, an input node spawns four types of resources. In the game, the spawning process was performed by a rocket delivering astronauts to a landing pad. On the right, you can see all the different destination node types, one type for each resource type. Both images were taken from the game description on the CodinGame website.
+  </span>
+</div>
+
+<p>
+  Tubes and teleporters connect the nodes of this network. 
+  A tube connects two nodes, and its cost is proportional to the distance between them. 
+  It is generally cheaper than teleporters but has a limited throughput. 
+  We can increase the throughput of a tube, but it quickly becomes costly. 
+  Resources circulate through tubes thanks to pods. 
+  A pod costs one-fifth of a teleporter, so it's a good habit to make it travel through multiple tubes to make them profitable. 
+  It takes one day for a pod to progress from one node to the next through a tube connecting the two. 
+  A node can have at most five tubes, two tubes cannot intersect, and a tube cannot cross a node; simple, no?
+</p>
+
+<div>
+  <div class="text-center">
+    <img class="img-fluid" src="{{"/assets/media/fall24/example1.gif" | relative_url }}" alt="Two turns on the first level">
+  </div>
+  <span class="caption text-muted">
+    The input node in the bottom center spawns two types of resources: blue and green. The destination node for the blue resource is on the top left, and the destination for the green one is on the top right. On the first day, I created a single pod to carry resources to their destinations because I could not afford two pods yet. On the second day, I destroyed the pod to reclaim some money and created two pods instead: resources are transferred to their destinations twice as fast.
+  </span>
+</div>
+
+<p>
+  Teleporters are instantaneous but directional: it takes zero days for resources to go from the IN teleporter node to the OUT teleporter node, but resources cannot go through the teleport from the OUT node to the IN node.
+  You cannot chain teleporters: once a node has a teleporter, either an IN or OUT gate, it cannot have another one. 
+  Still, when you must connect two sets/clusters of distant nodes, teleporters are very useful. 
+</p>
+
+<p>
+  Pods were the most challenging part of the game for me. 
+  I did not bother to understand their behavior fully. 
+  A custom pathing system distributes resources between pods and selects where resources go. 
+  It uses shortest distances, resource identifier ordering, and other subtleties that made me write the <b>rule #1</b> in my plan.
+  I suspect CodinGame introduced this kind of behavior to make it less accessible to write a search bot and to promote heuristics that are more beginner-friendly.
+  When search bots are easy to make, a challenge quickly becomes a code optimization process:
+  the one that makes more iterations per turn wins. 
+  Anyone can write heuristics rapidly, which is more rewarding for beginners. 
+  The only thing about pods I considered was that I could destroy a pod to reclaim three-fourths of its creation price and reallocate this money elsewhere on the network.
+</p>
+
+<p>
+  Some nodes appear after the first turn, so an excellent optimized network could quickly become limited when those new nodes arrive.
+  Another perturbation is that we do not know when or how much money we get per turn to extend/improve the network. 
+  A rule states that we get at least 10% of the funds remaining at the end of the previous turn. 
+  I also chose to ignore this rule.
+</p>
+
+<h2>3. Kick-starting </h2>
+
+<p>
+  The first step was to parse the input and display information about the game state to understand better what was happening. 
+  That's not fun, but I only do it twice per game I'm working on. 
+  The first time is filling in the most straightforward state representation I could imagine. 
+  The second time is when I'm better aware of how I'll need to manipulate data, and I entirely rewrite my state representation. 
+  Thankfully, I have some reusable code in my CodinGame git repository to parse data in C++.
+</p>
+
+<p>
+  I thought about a simple algorithm to get me started with 100% completion. 
+  I focused on the first input node of the state and picked the most spawned resource type for it. 
+  My first bot iteratively searched for this type's closest, unconnected, connectable destination node from the input node. 
+  The bot ended the turn when it found no more valid or affordable destination. 
+  The submission score for such a greedy, myopic bot is <code>728 505</code> points. 
+</p>
+
+<div>
+  <div class="text-center">
+    <img class="img-fluid" src="{{"/assets/media/fall24/step1_git.png" | relative_url }}" alt="Git commits for the first step">
+  </div>
+  <span class="caption text-muted">
+    This is an extract of my git commits for implementing this first step. I spend very little time on Friday, the 4th, to parse the game state. On Saturday, the 5th morning, I wrote my first 100% completion bot in less than one hour. I fiddled on Saturday afternoon to reach more than 4 million points. I invested less than four hours to implement this first step.     
+  </span>
+</div>
+
+<p>
+  Next, I fiddled with a manual solution for the first level to better understand pod creation/destruction and tube upgrade. 
+  Then, I improved the bot to handle more than the first spawn node, always with a 1-tube pod, and reached <code>3 576 647</code> points. 
+  I pushed a little more by adding a second phase in the bot, which searches for suitable teleporters connecting a spawn node to a destination node. 
+  My score progressed to <code>4 391 401</code> points, not bad!
+</p>  
+
+<p>
+  I quickly completed the first step of my plan. 
+  It did not take much time or effort, which was quite satisfying. 
+  My experience with graphs and having done <a href="https://www.codingame.com/multiplayer/bot-programming/platinum-rift-episode-2">Platinum Rift 2</a> and <a href="https://www.codingame.com/multiplayer/bot-programming/ghost-in-the-cell">Ghost in the Cell</a> games really helped.
+</p>
+
+<h2>4. Referee and Tooling </h2>
+
+<p> 
+  CodinGame has made it a habit to release the <a href="https://github.com/CodinGame/FallChallenge2024-SeleniaCity">referee code</a> on GitHub. 
+  You can then explore the code to understand the rules better, identify how points are computed, and ensure you know the range of possible values to be able to pack them in your state representation. 
+</p>
+
+<p>
+  I <a href="https://github.com/tdelame/FallChallenge2024-SeleniaCity/tree/virtual_atom">forked that repository</a> to address <b>rule #2</b> (<em>make the referee work for me</em>) before dealing with the rest of the plan.
+  I'm ashamed that I spent a lot of time setting up the dev environment to build the referee and its viewer and writing a Java program to test and validate my bots.
+  I'm leaving here some hints in case you are also unfamiliar with these and want to do the same. 
+</p>
+
+<p>
+  First, I created a class to execute my bot on the test sets and display the scores. 
+  I adapted a typical pattern we saw in the previous contest referees' shared forks and read the <a href="https://github.com/CodinGame/codingame-game-engine">CodinGame toolkit's code</a>.
+  Part of my efforts are public in the <a href="https://github.com/tdelame/FallChallenge2024-SeleniaCity/blob/virtual_atom/src/main/java/com/codingame/runner/CommandLineRunner.java">CommandLineRunner.java</a> file;
+  my remaining modifications are either too dirty to be published or too tied to my way of writing bots to be of use to others. 
+  Next, I did my best to add that file to the build system (see the <a href="https://github.com/tdelame/FallChallenge2024-SeleniaCity/blob/virtual_atom/pom.xml">pom.xml file</a>) and built the jar with a <code>mvn package</code> command in the repository root. 
+  I tried to figure out why I could not use the viewer until I realized I needed to build the viewer before calling <code>mvn</code>.
+  This is done by executing <code>tsc</code> in the <code>src/main/resources</code> directory (the directory containing a <code>package.json</code> file).
+  Now I can build programs relying on the official referee and even tweak such referee, but why am I trying to do so?
+</p>
+
+<p>
+  In my <a href="{% post_url /codingame/2021-06-06-spring21 %}">Spring Challenge 2021 retrospective</a>, I said that I borrowed an idea <code>_Royale</code>: make the referee validate my code.
+  People working with me know how much I like to let computers do part of my responsibilities, <em>&laquo;If a computer can do it, I won't do it.&raquo;</em> 
+  I have assertion macros allowing me to verify the state and report failure. 
+  When a failure happens, it breaks in the debugger or stops the bot immediately. 
+  I format my report with a prefix (I use <code>[DATA] </code>, borrowed from <code>Psyho</code> if I recall correctly). 
+  If the referee looks for this prefix in what my bot sends, the referee can alert me when something fails on a test case, at which turn, and on which level. 
+  I add assertions to the state parsing code to compare with the result I expect from my commands. 
+  I also add verifications in my algorithms, such as not trying to add a tube twice or creating a tube intersecting another, and so on. 
+  Finally, I have a crash handler in my bot to report whenever a crash occurs, its reason and the call stack. 
+  Thus, I only have to start my validation program on all levels to validate my bot. 
+  All these assertions can be deactivated by a <code>constexpr</code> variable, which is a good thing to do when submitting the final bot. 
+</p>
+
+<p>
+  With such tooling, I felt confident about rewriting my whole state representation and pursuing my plan.
+</p>
+
+<h2>5. Iterative Improvement Process </h2>
+
+<p>
+  I knew I would need an optimizer to quickly return the valid nodes to connect a given node with a tube. 
+  I decided to compute all the intersecting segments from the node positions. 
+  There are at most <code>150</code> nodes, thus at most <code>11 175</code> segments.
+  I index the segment between <code>A</code> and <code>B</code>, with <code>A &gt; B</code>, by <code>I = A * (A - 1) / 2 + B</code>.
+  For each segment <code>I</code>, I store a bitmask of all segments intersecting it <code>intersecting[I]</code>.
+  Similarly, I store a buffer of bits <code>allowed</code>representing which segment is allowed, i.e., do not cross a node. 
+  This data is updated whenever a new node is available and won't change during a turn. 
+  I store the current tubes in a separate buffer <code>tubes</code>: this buffer can change frequently during a turn.
+  To check if a tube can be created between <code>A</code> and <code>B</code>, I compute its index <code>I</code>,
+  then check if this index corresponds to an allowed segment, and finally check <code>tubes & intersecting[I]</code>.
+  There might be a better way to do it, but I never had to bother about performance or timeout during the contest.
+</p>
+
+<p>
+  At this point, we were past the weekend, and I had to code during my sleep time after work. 
+  My brain power became a constraint I underestimated. 
+  I managed to write a multi-tube greedy algorithm, but I still need to figure out how it works!
+  The bot is clearly limited but scored <code>5 052 457</code> points. 
+  I knew it was possible to do much better but was unable to do so. 
+  So I switched to the last step of my plan.
+</p>
+
+<div>
+  <div class="text-center">
+    <img class="img-fluid" src="{{"/assets/media/fall24/grid.gif" | relative_url }}" alt="Results of the special Grid algorithm">
+  </div>
+  <span class="caption text-muted">Replication of my handmade solution on the Grid level. 
+    The bot tries to find two tube pods around an input node, and never reuse the same destination node for a given input node.
+  </span>
+</div>
+
+<p>
+  I wrote manual solutions for half of the levels. 
+  For the levels where the handmade solution outperformed the greedy algorithm, I coded a specific algorithm to reproduce the approach of the handmade solution.
+  If I succeeded, I wrote a detection algorithm to identify the level from the inputs. 
+  I did so for the first level (Example1), the third level (Balancing), the eighth level (Grid), and the twelfth (Distribution Network). 
+  My score jumped to <code>5 972 041</code> points.
+  Based on the manual solutions I still had, I estimate it was possible to reach 6.4 million with this approach, even though the generic greedy algorithm was far from optimal. 
+  I decided to stop there; my brain could no longer function, and I was exhausted! 
+</p>
+
+<div>
+  <div class="text-center">
+    <img class="img-fluid" src="{{"/assets/media/fall24/distribution.gif" | relative_url }}" alt="Results of the special Distribution Network algorithm">
+  </div>
+  <span class="caption text-muted">Replication of my handmade solution on the Distribution Network level.
+    Crossing the map with tubes was quite expansive, I used teleporters instead.
+    I connected input nodes having the same resource types with pods. 
+    I tried to connect some destination nodes with tubes to distribute resource types without teleporters.
+  </span>
+</div>
+
+
+<h2>Conclusion</h2>
+
+<p>
+  I enjoyed this contest a lot. 
+  Relying on heuristics instead of trying to simulate all the game mechanisms was an excellent idea. 
+  This is the contest on which I spent the least time, though I reached my highest final rank: 40th out of 3970. 
+  Setting a dev environment to build and tweak the referee took time but was worth the effort; I'm sure it will be handy in my following CodinGame projects. 
+  Working on a plan before coding the first line again helped me to achieve my goals: I recommend anyone to try it at least once!
+</p>
+
+<p>
+  Congrats to each player, and thanks, CodinGame, for making an optimization challenge this year!
+</p>
